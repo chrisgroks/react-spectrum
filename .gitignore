@@ -18,5 +18,9 @@ packages/dev/storybook-builder-parcel/iframe.html
 packages/dev/storybook-builder-parcel/preview.js
 starters/docs/registry
 starters/tailwind/registry
+
+# Persistent folders - never reset
+.cursor/
+.persist/
 starters/docs/yarn.lock
 starters/tailwind/yarn.lock
