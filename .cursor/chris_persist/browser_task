@@ -1,0 +1,16 @@
+Review GitHub issue #7756 in the react-spectrum repo about DatePicker ref forwarding. The DatePicker component doesn't support ref forwarding, which prevents it from working with react-hook-form - validation errors can't auto-focus the DatePicker to help users fix mistakes.
+
+Fix this by adding forwardRef support to the DatePicker component in packages/react-aria-components/src/DatePicker.tsx using useImperativeHandle to expose a focus() method that focuses the first date segment. Add the same fix to DateRangePicker for consistency.
+
+Then create a new Storybook story called "DatePicker with react-hook-form" in packages/react-aria-components/stories/DatePicker.stories.tsx that demonstrates the fix working - include a form with validation that auto-focuses the DatePicker when an invalid date is submitted.
+
+
+When ready for testing, restart the Storybook server (runs on port 9003+, may already be running).
+Let me know when you're ready for validation, and check in with me before proceeding, this is important. 
+
+After my approval to proceed. Use your native browser tools to navigate and test this in the UI programmatically.
+
+Test the implementation with three scenarios:
+1. Submit with no date - should auto-focus DatePicker
+2. Submit with past/today's date - should auto-focus DatePicker with error
+3. Submit with future date - should succeed without auto-focus
