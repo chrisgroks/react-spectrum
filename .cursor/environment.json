@@ -1,0 +1,14 @@
+{
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "."
+  },
+  "install": "yarn install",
+  "start": "",
+  "terminals": [
+    {
+      "name": "Storybook",
+      "command": "yarn start"
+    }
+  ]
+}
