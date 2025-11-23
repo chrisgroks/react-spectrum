@@ -13,5 +13,3 @@ Your task:
 6. Prepare pull request materials (description, title, documentation) for a PR that compares branches WITHIN the chrisgroks fork (base: main, compare: feature-branch), NOT a PR to adobe/react-spectrum
 
 Focus on packages that are intended to be singletons (like @react-types/shared, @react-aria/utils, and other internal dependencies within the monorepo). Ensure the solution maintains backward compatibility where possible. give a link for the pr material clearly in the review summary. 
-
-Note: You may not have permissions to create PRs via CLI, so prepare all PR materials for manual creation via the GitHub web interface at the URL: https://github.com/chrisgroks/react-spectrum/compare/main...BRANCH_NAME
