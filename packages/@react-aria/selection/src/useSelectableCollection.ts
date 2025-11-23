@@ -93,7 +93,13 @@ export interface AriaSelectableCollectionOptions {
    * - 'override': links override all other interactions (link items are not selectable).
    * @default 'action'
    */
-  linkBehavior?: 'action' | 'selection' | 'override'
+  linkBehavior?: 'action' | 'selection' | 'override',
+  /**
+   * Handler that is called when the user presses Backspace or Delete on selected items.
+   * Receives a Set of keys representing the items to delete. If items are selected, those keys
+   * are passed. Otherwise, if an item is focused, that key is passed.
+   */
+  onDelete?: (keys: Set<Key>) => void
 }
 
 export interface SelectableCollectionAria {
@@ -121,7 +127,8 @@ export function useSelectableCollection(options: AriaSelectableCollectionOptions
     isVirtualized,
     // If no scrollRef is provided, assume the collection ref is the scrollable region
     scrollRef = ref,
-    linkBehavior = 'action'
+    linkBehavior = 'action',
+    onDelete
   } = options;
   let {direction} = useLocale();
   let router = useRouter();
@@ -291,6 +298,22 @@ export function useSelectableCollection(options: AriaSelectableCollectionOptions
           manager.clearSelection();
         }
         break;
+      case 'Backspace':
+      case 'Delete': {
+        if (onDelete) {
+          let keysToDelete: Set<Key> = new Set();
+          if (manager.selectedKeys.size > 0) {
+            keysToDelete = new Set(manager.selectedKeys);
+          } else if (manager.focusedKey != null) {
+            keysToDelete = new Set([manager.focusedKey]);
+          }
+          if (keysToDelete.size > 0) {
+            e.preventDefault();
+            onDelete(keysToDelete);
+          }
+        }
+        break;
+      }
       case 'Tab': {
         if (!allowsTabNavigation) {
           // There may be elements that are "tabbable" inside a collection (e.g. in a grid cell).

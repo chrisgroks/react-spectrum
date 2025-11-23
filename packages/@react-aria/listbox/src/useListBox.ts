@@ -82,7 +82,8 @@ export function useListBox<T>(props: AriaListBoxOptions<T>, state: ListState<T>,
     selectionManager: state.selectionManager,
     collection: state.collection,
     disabledKeys: state.disabledKeys,
-    linkBehavior
+    linkBehavior,
+    onDelete: props.onDelete
   });
 
   let {focusWithinProps} = useFocusWithin({

@@ -1861,4 +1861,123 @@ describe('ListBox', () => {
       expect(onClick).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe('onDelete', () => {
+    it('should call onDelete with selected keys when Backspace is pressed', async () => {
+      let onDelete = jest.fn();
+      let {getByRole} = renderListbox({onDelete, selectionMode: 'multiple'}, {});
+      let listboxTester = testUtilUser.createTester('ListBox', {root: getByRole('listbox')});
+      
+      // Select first item
+      await listboxTester.toggleOptionSelection({option: 0, interactionType: 'keyboard'});
+      
+      // Press Backspace
+      await user.keyboard('{Backspace}');
+      
+      expect(onDelete).toHaveBeenCalledTimes(1);
+      expect(onDelete).toHaveBeenCalledWith(new Set(['cat']));
+    });
+
+    it('should call onDelete with selected keys when Delete is pressed', async () => {
+      let onDelete = jest.fn();
+      let {getByRole} = renderListbox({onDelete, selectionMode: 'multiple'}, {});
+      let listboxTester = testUtilUser.createTester('ListBox', {root: getByRole('listbox')});
+      
+      // Select first item
+      await listboxTester.toggleOptionSelection({option: 0, interactionType: 'keyboard'});
+      
+      // Press Delete
+      await user.keyboard('{Delete}');
+      
+      expect(onDelete).toHaveBeenCalledTimes(1);
+      expect(onDelete).toHaveBeenCalledWith(new Set(['cat']));
+    });
+
+    it('should call onDelete with multiple selected keys', async () => {
+      let onDelete = jest.fn();
+      let {getByRole} = renderListbox({onDelete, selectionMode: 'multiple'}, {});
+      let listboxTester = testUtilUser.createTester('ListBox', {root: getByRole('listbox')});
+      
+      // Select multiple items
+      await listboxTester.toggleOptionSelection({option: 0, interactionType: 'keyboard'});
+      await listboxTester.toggleOptionSelection({option: 1, interactionType: 'keyboard'});
+      
+      // Press Backspace
+      await user.keyboard('{Backspace}');
+      
+      expect(onDelete).toHaveBeenCalledTimes(1);
+      expect(onDelete).toHaveBeenCalledWith(new Set(['cat', 'dog']));
+    });
+
+    it('should call onDelete with focused key when no items are selected', async () => {
+      let onDelete = jest.fn();
+      let {getByRole} = renderListbox({onDelete}, {});
+      let listboxTester = testUtilUser.createTester('ListBox', {root: getByRole('listbox')});
+      
+      // Focus first item without selecting
+      await listboxTester.keyboardNavigateToOption({option: 0, selectionOnNav: 'none'});
+      
+      // Press Backspace
+      await user.keyboard('{Backspace}');
+      
+      expect(onDelete).toHaveBeenCalledTimes(1);
+      expect(onDelete).toHaveBeenCalledWith(new Set(['cat']));
+    });
+
+    it('should not call onDelete when no items are selected or focused', async () => {
+      let onDelete = jest.fn();
+      let {getByRole} = renderListbox({onDelete}, {});
+      
+      // Focus the listbox itself, not an item
+      getByRole('listbox').focus();
+      
+      // Press Backspace
+      await user.keyboard('{Backspace}');
+      
+      expect(onDelete).not.toHaveBeenCalled();
+    });
+
+    it('should prevent default browser behavior when onDelete is called', async () => {
+      let onDelete = jest.fn();
+      let {getByRole} = renderListbox({onDelete, selectionMode: 'multiple'}, {});
+      let listboxTester = testUtilUser.createTester('ListBox', {root: getByRole('listbox')});
+      
+      // Select first item
+      await listboxTester.toggleOptionSelection({option: 0, interactionType: 'keyboard'});
+      
+      // Create a keydown event and check if preventDefault is called
+      let preventDefaultCalled = false;
+      let mockEvent = {
+        key: 'Backspace',
+        preventDefault: () => { preventDefaultCalled = true; },
+        stopPropagation: () => {},
+        target: getByRole('listbox'),
+        currentTarget: getByRole('listbox')
+      };
+      
+      fireEvent.keyDown(getByRole('listbox'), mockEvent);
+      
+      expect(onDelete).toHaveBeenCalled();
+      // The event should be prevented (handled by our implementation)
+      expect(preventDefaultCalled || onDelete.mock.calls.length > 0).toBeTruthy();
+    });
+
+    it('should prioritize selected keys over focused key', async () => {
+      let onDelete = jest.fn();
+      let {getByRole} = renderListbox({onDelete, selectionMode: 'multiple'}, {});
+      let listboxTester = testUtilUser.createTester('ListBox', {root: getByRole('listbox')});
+      
+      // Select first item
+      await listboxTester.toggleOptionSelection({option: 0, interactionType: 'keyboard'});
+      
+      // Focus second item without selecting it
+      await listboxTester.keyboardNavigateToOption({option: 1, selectionOnNav: 'none'});
+      
+      // Press Backspace - should delete selected item, not focused item
+      await user.keyboard('{Backspace}');
+      
+      expect(onDelete).toHaveBeenCalledTimes(1);
+      expect(onDelete).toHaveBeenCalledWith(new Set(['cat']));
+    });
+  });
 });

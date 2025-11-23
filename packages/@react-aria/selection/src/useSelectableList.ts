@@ -76,7 +76,8 @@ export function useSelectableList(props: AriaSelectableListOptions): SelectableL
     ...props,
     ref,
     selectionManager,
-    keyboardDelegate: delegate
+    keyboardDelegate: delegate,
+    onDelete: props.onDelete
   });
 
   return {
