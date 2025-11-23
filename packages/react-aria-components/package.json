@@ -41,6 +41,13 @@
     "url": "https://github.com/adobe/react-spectrum"
   },
   "dependencies": {
+    "@swc/helpers": "^0.5.0",
+    "client-only": "^0.0.1",
+    "react-aria": "^3.44.0",
+    "react-stately": "^3.42.0",
+    "use-sync-external-store": "^1.4.0"
+  },
+  "peerDependencies": {
     "@internationalized/date": "^3.10.0",
     "@internationalized/string": "^3.2.7",
     "@react-aria/autocomplete": "3.0.0-rc.3",
@@ -65,13 +72,6 @@
     "@react-types/grid": "^3.3.6",
     "@react-types/shared": "^3.32.1",
     "@react-types/table": "^3.13.4",
-    "@swc/helpers": "^0.5.0",
-    "client-only": "^0.0.1",
-    "react-aria": "^3.44.0",
-    "react-stately": "^3.42.0",
-    "use-sync-external-store": "^1.4.0"
-  },
-  "peerDependencies": {
     "react": "^16.8.0 || ^17.0.0-rc.1 || ^18.0.0 || ^19.0.0-rc.1",
     "react-dom": "^16.8.0 || ^17.0.0-rc.1 || ^18.0.0 || ^19.0.0-rc.1"
   },
