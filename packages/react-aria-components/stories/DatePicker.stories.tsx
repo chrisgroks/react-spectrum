@@ -259,11 +259,8 @@ export const FormValidationExample: DatePickerStory = (args) => {
     
     if (!selectedDate) {
       setErrorMessage('Please select a date');
-      // Try to focus the DatePicker using ref
-      // NOTE: This doesn't work because DatePicker doesn't support ref forwarding
-      // ref.current will be null, and even if it wasn't, there's no focus() method
+      // Focus the DatePicker using ref - this now works with ref forwarding!
       if (datePickerRef.current) {
-        // @ts-ignore - This won't work, demonstrating the problem
         datePickerRef.current.focus();
       }
       return;
@@ -273,11 +270,8 @@ export const FormValidationExample: DatePickerStory = (args) => {
     
     if (selectedJsDate <= today) {
       setErrorMessage('Please select a future date');
-      // Try to focus the DatePicker using ref
-      // NOTE: This doesn't work because DatePicker doesn't support ref forwarding
-      // The ref.current is null because DatePicker doesn't forward refs
+      // Focus the DatePicker using ref - this now works with ref forwarding!
       if (datePickerRef.current) {
-        // @ts-ignore - This won't work, demonstrating the problem
         datePickerRef.current.focus();
       }
       return;
@@ -295,7 +289,7 @@ export const FormValidationExample: DatePickerStory = (args) => {
         value={selectedDate}
         onChange={setSelectedDate}
         {...args}>
-        <Label style={{display: 'block'}}>Select Event Date</Label>
+        <Label style={{display: 'block'}}>Select Event Date (must be in the future)</Label>
         <Group style={{display: 'inline-flex'}}>
           <DateInput className={styles.field}>
             {segment => <DateSegment segment={segment} className={clsx(styles.segment, {[styles.placeholder]: segment.isPlaceholder})} />}
@@ -335,5 +329,142 @@ export const FormValidationExample: DatePickerStory = (args) => {
         Submit
       </Button>
     </Form>
+  );
+};
+
+/**
+ * DatePicker with react-hook-form
+ * 
+ * This story demonstrates DatePicker with ref forwarding support for react-hook-form integration.
+ * The DatePicker now exposes a focus() method that automatically focuses the first date segment,
+ * enabling validation error auto-focus functionality.
+ * 
+ * Test scenarios:
+ * 1. Submit with no date - should auto-focus DatePicker
+ * 2. Submit with past/today's date - should auto-focus DatePicker with error
+ * 3. Submit with future date - should succeed without auto-focus
+ */
+export const DatePickerWithReactHookForm: DatePickerStory = (args) => {
+  const datePickerRef = React.useRef(null);
+  const [selectedDate, setSelectedDate] = React.useState(null);
+  const [errorMessage, setErrorMessage] = React.useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    // Validate that the date is in the future
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    if (!selectedDate) {
+      setErrorMessage('Please select a date');
+      // Simulates react-hook-form's setFocus() - auto-focus the DatePicker
+      if (datePickerRef.current) {
+        datePickerRef.current.focus();
+      }
+      return;
+    }
+    
+    const selectedJsDate = new Date(selectedDate.year, selectedDate.month - 1, selectedDate.day);
+    
+    if (selectedJsDate <= today) {
+      setErrorMessage('Please select a future date (not today or in the past)');
+      // Simulates react-hook-form's setFocus() - auto-focus the DatePicker on validation error
+      if (datePickerRef.current) {
+        datePickerRef.current.focus();
+      }
+      return;
+    }
+    
+    // Validation passed
+    setErrorMessage('');
+    action('Form submitted successfully!')(selectedDate);
+    alert('Success! Form submitted with valid future date.');
+  };
+
+  return (
+    <div style={{padding: 20}}>
+      <h3>DatePicker with Auto-Focus on Validation Error</h3>
+      <p style={{marginBottom: 20, color: '#666'}}>
+        This demonstrates the ref forwarding fix for issue #7756. 
+        Try submitting with no date, a past date, or a future date to test auto-focus behavior.
+      </p>
+      
+      <Form onSubmit={handleSubmit} style={{display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 400}}>
+        <DatePicker
+          ref={datePickerRef}
+          value={selectedDate}
+          onChange={setSelectedDate}
+          {...args}>
+          <Label style={{display: 'block', fontWeight: 'bold', marginBottom: 4}}>
+            Event Date *
+          </Label>
+          <Group style={{display: 'inline-flex', border: errorMessage ? '2px solid red' : '1px solid #ccc', borderRadius: 4, padding: 4}}>
+            <DateInput className={styles.field}>
+              {segment => <DateSegment segment={segment} className={clsx(styles.segment, {[styles.placeholder]: segment.isPlaceholder})} />}
+            </DateInput>
+            <Button style={{marginLeft: 8}}>🗓</Button>
+          </Group>
+          <Popover
+            placement="bottom start"
+            style={{
+              background: 'Canvas',
+              color: 'CanvasText',
+              border: '1px solid gray',
+              padding: 20,
+              borderRadius: 8,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+            }}>
+            <Dialog>
+              <Calendar style={{width: 220}}>
+                <div style={{display: 'flex', alignItems: 'center', marginBottom: 8}}>
+                  <Button slot="previous">&lt;</Button>
+                  <Heading style={{flex: 1, textAlign: 'center'}} />
+                  <Button slot="next">&gt;</Button>
+                </div>
+                <CalendarGrid style={{width: '100%'}}>
+                  {date => <CalendarCell date={date} style={({isSelected, isOutsideMonth}) => ({display: isOutsideMonth ? 'none' : '', textAlign: 'center', cursor: 'default', background: isSelected ? 'blue' : '', color: isSelected ? 'white' : '', borderRadius: 4, padding: 4})} />}
+                </CalendarGrid>
+              </Calendar>
+            </Dialog>
+          </Popover>
+        </DatePicker>
+        
+        {errorMessage && (
+          <div style={{color: 'red', fontSize: '14px', padding: 8, backgroundColor: '#fee', borderRadius: 4, border: '1px solid red'}}>
+            ⚠️ {errorMessage}
+          </div>
+        )}
+        
+        <div style={{fontSize: '12px', color: '#666', marginTop: -8}}>
+          * Date must be in the future
+        </div>
+        
+        <Button 
+          type="submit" 
+          style={{
+            marginTop: 8, 
+            alignSelf: 'flex-start',
+            padding: '8px 16px',
+            backgroundColor: '#0070f3',
+            color: 'white',
+            border: 'none',
+            borderRadius: 4,
+            cursor: 'pointer',
+            fontWeight: 'bold'
+          }}>
+          Submit
+        </Button>
+      </Form>
+      
+      <div style={{marginTop: 32, padding: 16, backgroundColor: '#f5f5f5', borderRadius: 4}}>
+        <h4 style={{marginTop: 0}}>Test Scenarios:</h4>
+        <ol style={{fontSize: '14px', lineHeight: 1.6}}>
+          <li><strong>No date:</strong> Submit without selecting a date - DatePicker will auto-focus</li>
+          <li><strong>Past/Today:</strong> Select today or a past date - DatePicker will auto-focus with error</li>
+          <li><strong>Future date:</strong> Select a future date - Form submits successfully</li>
+        </ol>
+      </div>
+    </div>
   );
 };

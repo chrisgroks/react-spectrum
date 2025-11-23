@@ -17,7 +17,7 @@ import {createPortal} from 'react-dom';
 import {FocusableContext} from '@react-aria/interactions';
 import {forwardRefType, Key, Node} from '@react-types/shared';
 import {Hidden} from './Hidden';
-import React, {createContext, ForwardedRef, forwardRef, JSX, ReactElement, ReactNode, useCallback, useContext, useMemo, useRef, useState} from 'react';
+import React, {createContext, ForwardedRef, forwardRef, JSX, ReactElement, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState} from 'react';
 import {useIsSSR} from '@react-aria/ssr';
 import {useSyncExternalStore as useSyncExternalStoreShim} from 'use-sync-external-store/shim/index.js';
 
@@ -27,7 +27,14 @@ const CollectionDocumentContext = createContext<Document<any, BaseCollection<any
 export interface CollectionBuilderProps<C extends BaseCollection<object>> {
   content: ReactNode,
   children: (collection: C) => ReactNode,
-  createCollection?: () => C
+  createCollection?: () => C,
+  /**
+   * Whether to defer building the collection until after the initial render.
+   * This improves performance when rendering components with large collections,
+   * especially when nested inside modals or dialogs.
+   * @default false
+   */
+  deferCollectionRendering?: boolean
 }
 
 /**
@@ -51,13 +58,41 @@ export function CollectionBuilder<C extends BaseCollection<object>>(props: Colle
   // This is fine. CollectionDocumentContext never changes after mounting.
   // eslint-disable-next-line react-hooks/rules-of-hooks
   let {collection, document} = useCollectionDocument(props.createCollection);
+  
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  let [shouldRenderCollection, setShouldRenderCollection] = useState(!props.deferCollectionRendering);
+  
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  useEffect(() => {
+    if (props.deferCollectionRendering && !shouldRenderCollection) {
+      // Use requestIdleCallback if available, otherwise setTimeout
+      const schedule = typeof requestIdleCallback !== 'undefined' 
+        ? requestIdleCallback 
+        : (cb: () => void) => setTimeout(cb, 0);
+        
+      const id = schedule(() => {
+        setShouldRenderCollection(true);
+      });
+      
+      return () => {
+        if (typeof requestIdleCallback !== 'undefined') {
+          cancelIdleCallback(id as number);
+        } else {
+          clearTimeout(id as number);
+        }
+      };
+    }
+  }, [props.deferCollectionRendering, shouldRenderCollection]);
+  
   return (
     <>
-      <Hidden>
-        <CollectionDocumentContext.Provider value={document}>
-          {props.content}
-        </CollectionDocumentContext.Provider>
-      </Hidden>
+      {shouldRenderCollection && (
+        <Hidden>
+          <CollectionDocumentContext.Provider value={document}>
+            {props.content}
+          </CollectionDocumentContext.Provider>
+        </Hidden>
+      )}
       <CollectionInner render={props.children} collection={collection} />
     </>
   );

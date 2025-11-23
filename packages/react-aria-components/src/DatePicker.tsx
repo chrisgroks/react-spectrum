@@ -36,7 +36,7 @@ import {GroupContext} from './Group';
 import {HiddenDateInput} from './HiddenDateInput';
 import {LabelContext} from './Label';
 import {PopoverContext} from './Popover';
-import React, {createContext, ForwardedRef, forwardRef, useCallback, useRef, useState} from 'react';
+import React, {createContext, ForwardedRef, forwardRef, useCallback, useImperativeHandle, useRef, useState} from 'react';
 import {TextContext} from './Text';
 
 export interface DatePickerRenderProps {
@@ -136,6 +136,19 @@ export const DatePicker = /*#__PURE__*/ (forwardRef as forwardRefType)(function 
     label,
     validationBehavior
   }, state, groupRef);
+
+  // Expose a focus() method that focuses the first date segment
+  useImperativeHandle(ref, () => ({
+    focus() {
+      // Focus the first segment in the date field
+      if (groupRef.current) {
+        let firstSegment = groupRef.current.querySelector('[role="spinbutton"], [role="textbox"]') as HTMLElement;
+        if (firstSegment) {
+          firstSegment.focus();
+        }
+      }
+    }
+  }));
 
   // Allows calendar width to match input group
   let [groupWidth, setGroupWidth] = useState<string | null>(null);
@@ -246,6 +259,19 @@ export const DateRangePicker = /*#__PURE__*/ (forwardRef as forwardRefType)(func
     label,
     validationBehavior
   }, state, groupRef);
+
+  // Expose a focus() method that focuses the first date segment
+  useImperativeHandle(ref, () => ({
+    focus() {
+      // Focus the first segment in the date range field
+      if (groupRef.current) {
+        let firstSegment = groupRef.current.querySelector('[role="spinbutton"], [role="textbox"]') as HTMLElement;
+        if (firstSegment) {
+          firstSegment.focus();
+        }
+      }
+    }
+  }));
 
   // Allows calendar width to match input group
   let [groupWidth, setGroupWidth] = useState<string | null>(null);

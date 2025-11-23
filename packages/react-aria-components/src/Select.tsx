@@ -38,7 +38,7 @@ import {LabelContext} from './Label';
 import {ListBoxContext, ListStateContext} from './ListBox';
 import {OverlayTriggerStateContext} from './Dialog';
 import {PopoverContext} from './Popover';
-import React, {createContext, ForwardedRef, forwardRef, Fragment, HTMLAttributes, ReactNode, useCallback, useContext, useMemo, useRef, useState} from 'react';
+import React, {createContext, ForwardedRef, forwardRef, Fragment, HTMLAttributes, ReactNode, useCallback, useContext, useDeferredValue, useEffect, useMemo, useRef, useState, useTransition} from 'react';
 import {TextContext} from './Text';
 
 type SelectionMode = 'single' | 'multiple';
@@ -113,7 +113,7 @@ export const Select = /*#__PURE__*/ (forwardRef as forwardRefType)(function Sele
   ), [children, isDisabled, isInvalid, isRequired]);
 
   return (
-    <CollectionBuilder content={content}>
+    <CollectionBuilder content={content} deferCollectionRendering>
       {collection => <SelectInner props={props} collection={collection} selectRef={ref} />}
     </CollectionBuilder>
   );
