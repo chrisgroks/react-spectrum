@@ -1,5 +1,22 @@
 Task: Fix Duplicate Package Installation Issue (#8777)
+
 Review GitHub issue #8777 at https://github.com/adobe/react-spectrum/issues/8777 in the adobe/react-spectrum repository. The issue describes a problem where internal package dependencies using version ranges (e.g., "^3.5.27") cause duplicate package installations in consumers' node_modules, breaking type overrides and singleton behavior.
+
 The user requests one of two solutions: (A) make internal dependencies strict with exact versions, or (B) convert internal dependencies to peer dependencies. Solution B is preferred as it ensures true singleton behavior.
-Your task: Analyze the monorepo structure to understand how packages reference each other. Create a plan to implement the preferred solution (peer dependencies for internal packages). Execute the plan by modifying relevant package.json files. Build and test the changes to ensure no breaking behavior. Finally, create a pull request on the chrisgroks fork at https://github.com/chrisgroks/react-spectrum (not the adobe official repository) with a clear description of the changes and their benefits.
-Focus on packages that are intended to be singletons (like @react-types/shared, @react-aria/utils, and other internal dependencies within the monorepo). Ensure the solution maintains backward compatibility where possible.
+
+Your task: 
+1. Analyze the monorepo structure to understand how packages reference each other
+2. Create a plan to implement the preferred solution (peer dependencies for internal packages)
+3. Execute the plan by modifying relevant package.json files
+4. Test the changes thoroughly:
+   - Run type checking: yarn check-types
+   - Run full test suite: yarn test (WAIT for completion)
+   - Verify all tests pass
+   - Fix any failures before proceeding
+
+5. Only after tests pass: Commit changes to a feature branch and push to the chrisgroks fork at https://github.com/chrisgroks/react-spectrum
+6. Prepare pull request materials (description, title, documentation) for a PR that compares branches WITHIN the chrisgroks fork (base: main, compare: feature-branch), NOT a PR to adobe/react-spectrum
+
+Focus on packages that are intended to be singletons (like @react-types/shared, @react-aria/utils, and other internal dependencies within the monorepo). Ensure the solution maintains backward compatibility where possible. Clearly provide the link to the PR in the final response, when summarizing the work completed.  don't create artifacts of summaries of work done. 
+
+Note: You may not have permissions to create PRs via CLI, so prepare all PR materials for manual creation via the GitHub web interface at the URL: https://github.com/chrisgroks/react-spectrum/compare/main...BRANCH_NAME
