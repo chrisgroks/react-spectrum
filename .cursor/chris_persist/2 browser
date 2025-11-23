@@ -5,10 +5,10 @@ Fix this by adding forwardRef support to the DatePicker component in packages/re
 Then create a new Storybook story called "DatePicker with react-hook-form" in packages/react-aria-components/stories/DatePicker.stories.tsx that demonstrates the fix working - include a form with validation that auto-focuses the DatePicker when an invalid date is submitted.
 
 
-When ready for testing, restart the Storybook server (runs on port 9003+, may already be running).
+When ready for testing, kill any currently running sorybook processes, restart the Storybook server (runs on port 9003+, may already be running), then check in with me. 
 Let me know when you're ready for validation, and check in with me before proceeding, this is important. 
 
-After my approval to proceed. Use your native browser tools to navigate and test this in the UI programmatically.
+After my approval to proceed. Use your native browser tools to navigate and test this in the UI programmatically. The storybook content is in an iframe, and you may need to navigate directly to it in order to interact with it.
 
 Test the implementation with three scenarios:
 1. Submit with no date - should auto-focus DatePicker
