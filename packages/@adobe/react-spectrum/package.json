@@ -40,11 +40,8 @@
     "url": "https://github.com/adobe/react-spectrum"
   },
   "dependencies": {
-    "@internationalized/string": "^3.2.7",
     "@react-aria/collections": "^3.0.0",
     "@react-aria/i18n": "^3.12.13",
-    "@react-aria/ssr": "^3.9.10",
-    "@react-aria/utils": "^3.31.0",
     "@react-aria/visually-hidden": "^3.8.28",
     "@react-spectrum/accordion": "^3.0.13",
     "@react-spectrum/actionbar": "^3.6.14",
@@ -102,7 +99,6 @@
     "@react-spectrum/well": "^3.4.27",
     "@react-stately/collections": "^3.12.8",
     "@react-stately/data": "^3.14.1",
-    "@react-types/shared": "^3.32.1",
     "client-only": "^0.0.1"
   },
   "publishConfig": {
@@ -110,7 +106,15 @@
   },
   "peerDependencies": {
     "react": "^16.8.0 || ^17.0.0-rc.1 || ^18.0.0 || ^19.0.0-rc.1",
-    "react-dom": "^16.8.0 || ^17.0.0-rc.1 || ^18.0.0 || ^19.0.0-rc.1"
+    "react-dom": "^16.8.0 || ^17.0.0-rc.1 || ^18.0.0 || ^19.0.0-rc.1",
+    "@internationalized/string": "^3.2.7",
+    "@react-aria/ssr": "^3.9.10",
+    "@react-aria/utils": "^3.31.0",
+    "@react-types/shared": "^3.32.1",
+    "@react-stately/utils": "^3.10.8",
+    "@react-stately/flags": "^3.1.2",
+    "@internationalized/date": "^3.10.0",
+    "@internationalized/number": "^3.6.5"
   },
   "devDependencies": {
     "@babel/cli": "^7.12.10",
