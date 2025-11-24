@@ -41,7 +41,7 @@
   },
   "dependencies": {
     "@react-spectrum/theme-default": "^3.5.22",
-    "@react-types/provider": "^3.8.13",
+    "@react-types/provider": "3.8.13",
     "@swc/helpers": "^0.5.0"
   },
   "devDependencies": {
