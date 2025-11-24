@@ -5,10 +5,10 @@
 **Title:** Fix duplicate package installations by converting internal dependencies to peer dependencies
 
 **Base Branch:** `main` (in chrisgroks/react-spectrum fork)  
-**Compare Branch:** `fix/peer-deps-singleton-8777` (in chrisgroks/react-spectrum fork)
+**Compare Branch:** `feature/fix-duplicate-deps-8777` (in chrisgroks/react-spectrum fork)
 
 **GitHub PR Creation URL:**  
-https://github.com/chrisgroks/react-spectrum/compare/main...fix/peer-deps-singleton-8777
+https://github.com/chrisgroks/react-spectrum/compare/main...feature/fix-duplicate-deps-8777
 
 ---
 
@@ -16,127 +16,36 @@ https://github.com/chrisgroks/react-spectrum/compare/main...fix/peer-deps-single
 
 ### Summary
 
-This PR addresses issue #8777 by converting key singleton packages to peer dependencies, preventing duplicate package installations in consumer projects.
+This PR addresses issue #8777 by converting internal package dependencies (within the monorepo) to `peerDependencies` for component and utility packages. This ensures singleton behavior for shared utilities and types, preventing duplicate installations in consumer projects.
 
-#### Problem
+### Problem
 
-Currently, internal packages like `@react-types/shared`, `@react-aria/utils`, and `@react-stately/utils` are declared as regular dependencies with version ranges (e.g., `^3.31.0`). This causes issues when:
+Internal packages like `@react-types/shared`, `@react-aria/utils`, and others are declared as regular `dependencies` with version ranges (e.g., `^3.x.x`). This can lead to duplicate installations when consumers rely on different versions or when hoisting fails, breaking:
+- Type overrides (e.g., globally augmented types)
+- Singleton behavior (e.g., Context providers, IDs)
 
-1. A consumer pins a specific version (e.g., `3.31.0`)
-2. A new release includes an updated internal package (e.g., `3.32.0`)
-3. The package manager installs both versions, breaking:
-   - Type overrides (e.g., `RouterConfig` from `@react-types/shared`)
-   - Singleton behavior (e.g., `RouterProvider` from `@react-aria/utils`)
-   - Context-based features that rely on reference equality
+### Solution
 
-#### Solution
-
-This PR implements **Solution B** from the issue: converting internal singleton packages to peer dependencies. This ensures:
-
-- True singleton behavior across the dependency tree
-- Consumers explicitly control singleton versions
-- No duplicate installations when version ranges overlap
-- Type overrides work correctly
+Implemented **Solution B** from the issue: converting internal dependencies to `peerDependencies`.
+- Internal dependencies (e.g., `@react-aria/utils` inside `@react-aria/button`) are moved to `peerDependencies`.
+- They are also added to `devDependencies` to ensure local development and testing work correctly.
+- Umbrella packages (`react-aria`, `react-stately`, `@adobe/react-spectrum`, `react-aria-components`) are **excluded** from this change, as they are intended to bundle dependencies for the consumer.
 
 ### Changes
 
-- **185 packages modified**: Moved 343 internal dependencies to `peerDependencies`
-- **Singleton packages** (now peer dependencies):
-  - `@react-types/shared`
-  - `@react-aria/utils`
-  - `@react-aria/ssr`
-  - `@react-stately/utils`
-  - `@react-stately/flags`
-  - `@internationalized/string`
-  - `@internationalized/date`
-  - `@internationalized/number`
-  - `@internationalized/message`
-
-- **Aggregator packages updated**: `react-aria`, `react-stately`, and other meta-packages now declare all required singleton peer dependencies
+- **Modified Packages**: ~180 packages (components, utilities, types)
+- **Action**: Moved internal dependencies from `dependencies` to `peerDependencies` + `devDependencies`.
+- **Excluded**: Aggregator/Umbrella packages to maintain ease of use for consumers using the full libraries.
 
 ### Testing
 
-- ✅ All existing tests pass
-- ✅ Dependencies install successfully with warnings about peer dependencies (expected)
-- ✅ Sample test suite (`@react-aria/breadcrumbs`) runs successfully
+- ✅ Build verification: Built `@react-spectrum/button` successfully with the new dependency structure.
+- ✅ `yarn install` completes successfully.
 
-### Breaking Changes
+### Migration Guide
 
-**Consumers now need to handle peer dependencies:**
-
-1. **npm & pnpm**: Auto-install peer dependencies by default (no action needed for most users)
-2. **yarn**: May require explicit declaration of singleton packages in `package.json`
-
-**Migration guide for consumers:**
-
-If using Yarn and experiencing peer dependency warnings, add the singleton packages to your `package.json`:
-
-```json
-{
-  "dependencies": {
-    "@react-types/shared": "^3.32.1",
-    "@react-aria/utils": "^3.31.0",
-    "@react-aria/ssr": "^3.9.10",
-    "@react-stately/utils": "^3.10.8"
-  }
-}
-```
-
-### Benefits
-
-- ✅ **Prevents duplicate installations**: Version ranges no longer cause multiple copies
-- ✅ **Type override compatibility**: Type augmentations work correctly
-- ✅ **True singleton behavior**: Context providers and utilities maintain reference equality
-- ✅ **Explicit version control**: Consumers can pin exact versions without workarounds
-- ✅ **No more `resolutions` hacks**: Consumers don't need to use `resolutions` to force deduplication
+Consumers using individual packages (e.g. `@react-spectrum/button` directly) may need to ensure peer dependencies are installed. Modern package managers (npm 7+, pnpm) handle this automatically. Yarn v1 users may see warnings and need to install peers manually if not hoisted.
 
 ### Related
 
-- Fixes adobe/react-spectrum#8777
-- Related to RFC adobe/react-spectrum#8797 (future package consolidation)
-
-## Test Plan
-
-- [x] Verify dependencies install successfully
-- [x] Run existing test suite to ensure no regressions
-- [x] Confirm peer dependency warnings are informational only
-- [x] Test that singleton packages are properly deduplicated
-
----
-
-## Implementation Notes
-
-### Approach
-
-1. Identified singleton packages that should be treated as peer dependencies
-2. Created automation script to convert dependencies to peer dependencies across all packages
-3. Updated aggregator packages to declare all transitive peer dependencies
-4. Tested installation and basic functionality
-
-### Statistics
-
-- **Files changed**: 186
-- **Insertions**: 723
-- **Deletions**: 798
-- **Packages updated**: 185
-- **Dependencies converted**: 343
-
-### Commit
-
-- **Branch**: `fix/peer-deps-singleton-8777`
-- **Commit**: `8c77197e1` - "Convert internal singleton dependencies to peer dependencies"
-
----
-
-## Next Steps
-
-### To Create the PR:
-
-1. Visit: https://github.com/chrisgroks/react-spectrum/compare/main...fix/peer-deps-singleton-8777
-2. Click "Create pull request"
-3. Copy the PR description above
-4. Submit the PR
-
-### Note
-
-This PR is intended to be created **within the chrisgroks/react-spectrum fork** (comparing `main` to `fix/peer-deps-singleton-8777`), NOT as a PR to the upstream adobe/react-spectrum repository. This allows for review and testing of the approach before considering upstream submission.
+- Fixes #8777
