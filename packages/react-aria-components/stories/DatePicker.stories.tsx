@@ -337,3 +337,99 @@ export const FormValidationExample: DatePickerStory = (args) => {
     </Form>
   );
 };
+
+export const DatePickerWithReactHookForm: DatePickerStory = (args) => {
+  const datePickerRef = React.useRef<{focus: () => void}>(null);
+  const [selectedDate, setSelectedDate] = React.useState(null);
+  const [errorMessage, setErrorMessage] = React.useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    // Validate that the date is in the future
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    if (!selectedDate) {
+      setErrorMessage('Please select a date');
+      // NOW THIS WORKS! Focus the DatePicker using ref with the exposed focus() method
+      if (datePickerRef.current) {
+        datePickerRef.current.focus();
+      }
+      return;
+    }
+    
+    const selectedJsDate = new Date(selectedDate.year, selectedDate.month - 1, selectedDate.day);
+    
+    if (selectedJsDate <= today) {
+      setErrorMessage('Please select a future date');
+      // Focus the DatePicker on validation error
+      if (datePickerRef.current) {
+        datePickerRef.current.focus();
+      }
+      return;
+    }
+    
+    // Validation passed
+    setErrorMessage('');
+    action('Form submitted successfully!')(selectedDate);
+  };
+
+  return (
+    <Form onSubmit={handleSubmit} style={{display: 'flex', flexDirection: 'column', gap: 12}}>
+      <DatePicker
+        ref={datePickerRef}
+        value={selectedDate}
+        onChange={setSelectedDate}
+        {...args}>
+        <Label style={{display: 'block'}}>Select Event Date</Label>
+        <Group style={{display: 'inline-flex'}}>
+          <DateInput className={styles.field}>
+            {segment => <DateSegment segment={segment} className={clsx(styles.segment, {[styles.placeholder]: segment.isPlaceholder})} />}
+          </DateInput>
+          <Button>🗓</Button>
+        </Group>
+        <Popover
+          placement="bottom start"
+          style={{
+            background: 'Canvas',
+            color: 'CanvasText',
+            border: '1px solid gray',
+            padding: 20
+          }}>
+          <Dialog>
+            <Calendar style={{width: 220}}>
+              <div style={{display: 'flex', alignItems: 'center'}}>
+                <Button slot="previous">&lt;</Button>
+                <Heading style={{flex: 1, textAlign: 'center'}} />
+                <Button slot="next">&gt;</Button>
+              </div>
+              <CalendarGrid style={{width: '100%'}}>
+                {date => <CalendarCell date={date} style={({isSelected, isOutsideMonth}) => ({display: isOutsideMonth ? 'none' : '', textAlign: 'center', cursor: 'default', background: isSelected ? 'blue' : ''})} />}
+              </CalendarGrid>
+            </Calendar>
+          </Dialog>
+        </Popover>
+      </DatePicker>
+      
+      {errorMessage && (
+        <div style={{color: 'red', fontSize: '14px', marginTop: 4}}>
+          {errorMessage}
+        </div>
+      )}
+      
+      <Button type="submit" style={{marginTop: 8, alignSelf: 'flex-start'}}>
+        Submit
+      </Button>
+      
+      <div style={{marginTop: 16, padding: 12, background: '#f0f0f0', borderRadius: 4}}>
+        <strong>Test Instructions:</strong>
+        <ul style={{margin: '8px 0', paddingLeft: 20}}>
+          <li>Submit with no date - should auto-focus DatePicker</li>
+          <li>Submit with past/today's date - should auto-focus DatePicker with error</li>
+          <li>Submit with future date - should succeed without auto-focus</li>
+        </ul>
+      </div>
+    </Form>
+  );
+};

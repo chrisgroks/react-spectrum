@@ -36,7 +36,7 @@ import {GroupContext} from './Group';
 import {HiddenDateInput} from './HiddenDateInput';
 import {LabelContext} from './Label';
 import {PopoverContext} from './Popover';
-import React, {createContext, ForwardedRef, forwardRef, useCallback, useRef, useState} from 'react';
+import React, {createContext, ForwardedRef, forwardRef, useCallback, useImperativeHandle, useRef, useState} from 'react';
 import {TextContext} from './Text';
 
 export interface DatePickerRenderProps {
@@ -151,6 +151,20 @@ export const DatePicker = /*#__PURE__*/ (forwardRef as forwardRefType)(function 
   });
 
   let {focusProps, isFocused, isFocusVisible} = useFocusRing({within: true});
+  
+  // Expose a focus() method via ref for integration with form libraries like react-hook-form
+  useImperativeHandle(ref, () => ({
+    focus() {
+      // Focus the first date segment in the group
+      if (groupRef.current) {
+        const firstSegment = groupRef.current.querySelector('[role="spinbutton"]') as HTMLElement;
+        if (firstSegment) {
+          firstSegment.focus();
+        }
+      }
+    }
+  }));
+  
   let renderProps = useRenderProps({
     ...props,
     values: {
@@ -261,6 +275,20 @@ export const DateRangePicker = /*#__PURE__*/ (forwardRef as forwardRefType)(func
   });
 
   let {focusProps, isFocused, isFocusVisible} = useFocusRing({within: true});
+  
+  // Expose a focus() method via ref for integration with form libraries like react-hook-form
+  useImperativeHandle(ref, () => ({
+    focus() {
+      // Focus the first date segment in the group
+      if (groupRef.current) {
+        const firstSegment = groupRef.current.querySelector('[role="spinbutton"]') as HTMLElement;
+        if (firstSegment) {
+          firstSegment.focus();
+        }
+      }
+    }
+  }));
+  
   let renderProps = useRenderProps({
     ...props,
     values: {
