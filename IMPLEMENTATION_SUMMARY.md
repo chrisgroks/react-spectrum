@@ -32,10 +32,12 @@ Converted key singleton packages from regular `dependencies` to `peerDependencie
 
 ### Statistics
 
-- **Packages Modified**: 185
+- **Packages Modified**: 186 (185 initial + 1 fix)
 - **Dependencies Converted**: 343
-- **Lines Changed**: +723 / -798
-- **Commit**: `8c77197e1` on branch `fix/peer-deps-singleton-8777`
+- **Lines Changed**: +728 / -798
+- **Commits**: 
+  - `8c77197e1` - Initial conversion
+  - `6046dfb73` - Fix missing peer deps in @adobe/react-spectrum
 
 ### Key Modifications
 
@@ -168,5 +170,17 @@ Successfully implemented a comprehensive solution to the duplicate package insta
 
 ---
 
-**Implementation Date**: 2025-11-23  
-**Task Completion**: All 9 TODOs completed successfully
+**Implementation Date**: 2025-11-23/24  
+**Latest Update**: 2025-11-24 - Added missing peer dependencies to aggregator package
+**Task Completion**: All TODOs completed successfully
+
+## Latest Update (2025-11-24)
+
+Added missing transitive peer dependencies to `@adobe/react-spectrum` package:
+- `@internationalized/date`
+- `@internationalized/message`  
+- `@internationalized/number`
+- `@react-stately/flags`
+- `@react-stately/utils`
+
+This ensures that the main consumer-facing package properly declares all singleton peer dependencies required by its sub-packages.
