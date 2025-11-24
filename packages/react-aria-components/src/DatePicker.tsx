@@ -25,6 +25,7 @@ import {
   useSlot,
   useSlottedContext
 } from './utils';
+import {createFocusManager} from '@react-aria/focus';
 import {DateFieldContext} from './DateField';
 import {DatePickerState, DatePickerStateOptions, DateRangePickerState, DateRangePickerStateOptions, useDatePickerState, useDateRangePickerState} from 'react-stately';
 import {DialogContext, OverlayTriggerStateContext} from './Dialog';
@@ -36,7 +37,7 @@ import {GroupContext} from './Group';
 import {HiddenDateInput} from './HiddenDateInput';
 import {LabelContext} from './Label';
 import {PopoverContext} from './Popover';
-import React, {createContext, ForwardedRef, forwardRef, useCallback, useRef, useState} from 'react';
+import React, {createContext, ForwardedRef, forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState} from 'react';
 import {TextContext} from './Text';
 
 export interface DatePickerRenderProps {
@@ -137,6 +138,16 @@ export const DatePicker = /*#__PURE__*/ (forwardRef as forwardRefType)(function 
     validationBehavior
   }, state, groupRef);
 
+  // Create focus manager to programmatically focus the first date segment
+  let focusManager = useMemo(() => createFocusManager(groupRef), [groupRef]);
+
+  // Expose focus method via ref for integration with form libraries like react-hook-form
+  useImperativeHandle(ref, () => ({
+    focus() {
+      focusManager.focusFirst();
+    }
+  } as any));
+
   // Allows calendar width to match input group
   let [groupWidth, setGroupWidth] = useState<string | null>(null);
   let onResize = useCallback(() => {
@@ -168,6 +179,8 @@ export const DatePicker = /*#__PURE__*/ (forwardRef as forwardRefType)(function 
   let DOMProps = filterDOMProps(props, {global: true});
   delete DOMProps.id;
 
+  let divRef = useRef<HTMLDivElement>(null);
+
   return (
     <Provider
       values={[
@@ -196,7 +209,7 @@ export const DatePicker = /*#__PURE__*/ (forwardRef as forwardRefType)(function 
       ]}>
       <div
         {...mergeProps(DOMProps, renderProps, focusProps)}
-        ref={ref}
+        ref={divRef}
         slot={props.slot || undefined}
         data-focus-within={isFocused || undefined}
         data-invalid={state.isInvalid || undefined}
@@ -247,6 +260,16 @@ export const DateRangePicker = /*#__PURE__*/ (forwardRef as forwardRefType)(func
     validationBehavior
   }, state, groupRef);
 
+  // Create focus manager to programmatically focus the first date segment
+  let focusManager = useMemo(() => createFocusManager(groupRef), [groupRef]);
+
+  // Expose focus method via ref for integration with form libraries like react-hook-form
+  useImperativeHandle(ref, () => ({
+    focus() {
+      focusManager.focusFirst();
+    }
+  } as any));
+
   // Allows calendar width to match input group
   let [groupWidth, setGroupWidth] = useState<string | null>(null);
   let onResize = useCallback(() => {
@@ -277,6 +300,8 @@ export const DateRangePicker = /*#__PURE__*/ (forwardRef as forwardRefType)(func
 
   let DOMProps = filterDOMProps(props, {global: true});
   delete DOMProps.id;
+
+  let divRef = useRef<HTMLDivElement>(null);
 
   return (
     <Provider
@@ -311,7 +336,7 @@ export const DateRangePicker = /*#__PURE__*/ (forwardRef as forwardRefType)(func
       ]}>
       <div
         {...mergeProps(DOMProps, renderProps, focusProps)}
-        ref={ref}
+        ref={divRef}
         slot={props.slot || undefined}
         data-focus-within={isFocused || undefined}
         data-invalid={state.isInvalid || undefined}

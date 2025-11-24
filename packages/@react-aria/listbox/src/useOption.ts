@@ -125,6 +125,7 @@ export function useOption<T>(props: AriaOptionProps, state: ListState<T>, ref: R
   }
 
   let onAction = data?.onAction ? () => data?.onAction?.(key) : undefined;
+  let onRemove = data?.onRemove;
   let id = getItemId(state, key);
   let {itemProps, isPressed, isFocused, hasAction, allowsSelection} = useSelectableItem({
     selectionManager: state.selectionManager,
@@ -141,6 +142,23 @@ export function useOption<T>(props: AriaOptionProps, state: ListState<T>, ref: R
     UNSTABLE_itemBehavior: data?.['UNSTABLE_itemBehavior'],
     id
   });
+
+  // Handle Delete/Backspace keys for item removal
+  let onKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+      if (isDisabled) {
+        return;
+      }
+
+      e.preventDefault();
+      // If item is selected, remove all selected items; otherwise remove just this item
+      if (state.selectionManager.isSelected(key)) {
+        onRemove?.(new Set(state.selectionManager.selectedKeys));
+      } else {
+        onRemove?.(new Set([key]));
+      }
+    }
+  };
 
   let {hoverProps} = useHover({
     isDisabled: isDisabled || !shouldFocusOnHover,
@@ -159,7 +177,9 @@ export function useOption<T>(props: AriaOptionProps, state: ListState<T>, ref: R
   return {
     optionProps: {
       ...optionProps,
-      ...mergeProps(domProps, itemProps, hoverProps, linkProps),
+      ...mergeProps(domProps, itemProps, hoverProps, linkProps, {
+        onKeyDown: chain(onKeyDown, itemProps.onKeyDown)
+      }),
       id
     },
     labelProps: {

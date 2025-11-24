@@ -337,3 +337,101 @@ export const FormValidationExample: DatePickerStory = (args) => {
     </Form>
   );
 };
+
+export const DatePickerWithReactHookForm: DatePickerStory = (args) => {
+  const datePickerRef = React.useRef(null);
+  const [selectedDate, setSelectedDate] = React.useState(null);
+  const [errorMessage, setErrorMessage] = React.useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    // Validate that the date is in the future
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    if (!selectedDate) {
+      setErrorMessage('Please select a date');
+      // Focus the DatePicker using the new ref forwarding support
+      if (datePickerRef.current) {
+        datePickerRef.current.focus();
+      }
+      return;
+    }
+    
+    const selectedJsDate = new Date(selectedDate.year, selectedDate.month - 1, selectedDate.day);
+    
+    if (selectedJsDate <= today) {
+      setErrorMessage('Please select a future date');
+      // Focus the DatePicker on validation error
+      if (datePickerRef.current) {
+        datePickerRef.current.focus();
+      }
+      return;
+    }
+    
+    // Validation passed
+    setErrorMessage('');
+    action('Form submitted successfully!')(selectedDate);
+  };
+
+  return (
+    <Form onSubmit={handleSubmit} style={{display: 'flex', flexDirection: 'column', gap: 12}}>
+      <h3>DatePicker with Auto-Focus on Validation Error</h3>
+      <p style={{fontSize: '14px', color: 'gray', marginBottom: 12}}>
+        This story demonstrates the DatePicker component with ref forwarding support.
+        Try submitting the form without selecting a date, or with a past date, and the DatePicker will automatically receive focus.
+      </p>
+      
+      <DatePicker
+        ref={datePickerRef}
+        value={selectedDate}
+        onChange={setSelectedDate}
+        {...args}>
+        <Label style={{display: 'block'}}>Select Event Date (must be in the future)</Label>
+        <Group style={{display: 'inline-flex'}}>
+          <DateInput className={styles.field}>
+            {segment => <DateSegment segment={segment} className={clsx(styles.segment, {[styles.placeholder]: segment.isPlaceholder})} />}
+          </DateInput>
+          <Button>🗓</Button>
+        </Group>
+        <Popover
+          placement="bottom start"
+          style={{
+            background: 'Canvas',
+            color: 'CanvasText',
+            border: '1px solid gray',
+            padding: 20
+          }}>
+          <Dialog>
+            <Calendar style={{width: 220}}>
+              <div style={{display: 'flex', alignItems: 'center'}}>
+                <Button slot="previous">&lt;</Button>
+                <Heading style={{flex: 1, textAlign: 'center'}} />
+                <Button slot="next">&gt;</Button>
+              </div>
+              <CalendarGrid style={{width: '100%'}}>
+                {date => <CalendarCell date={date} style={({isSelected, isOutsideMonth}) => ({display: isOutsideMonth ? 'none' : '', textAlign: 'center', cursor: 'default', background: isSelected ? 'blue' : ''})} />}
+              </CalendarGrid>
+            </Calendar>
+          </Dialog>
+        </Popover>
+      </DatePicker>
+      
+      {errorMessage && (
+        <div style={{color: 'red', fontSize: '14px', marginTop: 4, padding: 8, backgroundColor: '#fee', border: '1px solid #fcc', borderRadius: 4}}>
+          {errorMessage}
+        </div>
+      )}
+      
+      <div style={{display: 'flex', gap: 8}}>
+        <Button type="submit">
+          Submit
+        </Button>
+        <Button type="button" onPress={() => { setSelectedDate(null); setErrorMessage(''); }}>
+          Reset
+        </Button>
+      </div>
+    </Form>
+  );
+};

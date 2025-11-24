@@ -373,6 +373,41 @@ These selection behaviors are defined in [Aria Practices](https://www.w3.org/WAI
 </ListBox>
 ```
 
+### Removing items
+
+The `onRemove` prop can be used to allow the user to remove items from a ListBox using keyboard shortcuts. When the `onRemove` prop is provided, users can press the <Keyboard>Delete</Keyboard> or <Keyboard>Backspace</Keyboard> keys to remove selected items. If no items are selected, the focused item will be removed. When multiple items are selected, all selected items will be removed at once.
+
+```tsx example
+import {useListData} from '@react-stately/data';
+
+function Example() {
+  let list = useListData({
+    initialItems: [
+      { id: 1, name: "Email 1" },
+      { id: 2, name: "Email 2" },
+      { id: 3, name: "Email 3" },
+      { id: 4, name: "Email 4" }
+    ]
+  });
+
+  return (
+    <ListBox
+      aria-label="Inbox"
+      selectionMode="multiple"
+      /*- begin highlight -*/
+      onRemove={(keys) => list.remove(...keys)}
+      /*- end highlight -*/
+      selectedKeys={list.selectedKeys}
+      onSelectionChange={list.setSelectedKeys}
+    >
+      {list.items.map(item => (
+        <ListBoxItem key={item.id} id={item.id}>{item.name}</ListBoxItem>
+      ))}
+    </ListBox>
+  );
+}
+```
+
 ## Links
 
 By default, interacting with an item in a ListBox triggers `onSelectionChange`. Alternatively, items may be links to another page or website. This can be achieved by passing the `href` prop to the `<ListBoxItem>` component.

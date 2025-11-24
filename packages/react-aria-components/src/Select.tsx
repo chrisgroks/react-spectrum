@@ -86,7 +86,14 @@ export interface SelectProps<T extends object = {}, M extends SelectionMode = 's
    * Temporary text that occupies the select when it is empty.
    * @default 'Select an item' (localized)
    */
-  placeholder?: string
+  placeholder?: string,
+  /**
+   * When true, defers building the collection until after the initial render.
+   * This improves performance for selects with many items by allowing the trigger to render immediately.
+   * Trade-off: If a value is pre-selected, it may briefly show a placeholder until the collection builds.
+   * @default false
+   */
+  deferCollectionRendering?: boolean
 }
 
 export const SelectContext = createContext<ContextValue<SelectProps<any, SelectionMode>, HTMLDivElement>>(null);
@@ -113,7 +120,7 @@ export const Select = /*#__PURE__*/ (forwardRef as forwardRefType)(function Sele
   ), [children, isDisabled, isInvalid, isRequired]);
 
   return (
-    <CollectionBuilder content={content}>
+    <CollectionBuilder content={content} deferCollectionRendering={props.deferCollectionRendering}>
       {collection => <SelectInner props={props} collection={collection} selectRef={ref} />}
     </CollectionBuilder>
   );

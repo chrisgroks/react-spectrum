@@ -46,7 +46,12 @@ export interface AriaListBoxProps<T> extends AriaListBoxPropsBase<T> {
    * Handler that is called when a user performs an action on an item. The exact user event depends on
    * the collection's `selectionBehavior` prop and the interaction modality.
    */
-  onAction?: (key: Key) => void
+  onAction?: (key: Key) => void,
+  /**
+   * Handler that is called when the user deletes items via keyboard (Delete or Backspace).
+   * Receives a Set of keys representing the items to be removed.
+   */
+  onRemove?: (keys: Set<Key>) => void
 }
 
 export interface SpectrumListBoxProps<T> extends AriaListBoxPropsBase<T>, AsyncLoadable, StyleProps {

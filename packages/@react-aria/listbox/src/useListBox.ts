@@ -100,6 +100,7 @@ export function useListBox<T>(props: AriaListBoxOptions<T>, state: ListState<T>,
     shouldFocusOnHover: props.shouldFocusOnHover,
     isVirtualized: props.isVirtualized,
     onAction: props.onAction,
+    onRemove: props.onRemove,
     linkBehavior,
     // @ts-ignore
     UNSTABLE_itemBehavior: props['UNSTABLE_itemBehavior']

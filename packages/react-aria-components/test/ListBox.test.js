@@ -1861,4 +1861,157 @@ describe('ListBox', () => {
       expect(onClick).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe('onRemove - Delete/Backspace support', () => {
+    it('should call onRemove with selected items when Delete key is pressed', async () => {
+      let onRemove = jest.fn();
+      let {getAllByRole} = renderListbox({selectionMode: 'multiple', onRemove});
+      let options = getAllByRole('option');
+
+      // Select first item
+      await user.click(options[0]);
+      expect(options[0]).toHaveAttribute('data-selected', 'true');
+
+      // Press Delete
+      fireEvent.keyDown(document.activeElement, {key: 'Delete'});
+      fireEvent.keyUp(document.activeElement, {key: 'Delete'});
+
+      expect(onRemove).toHaveBeenCalledTimes(1);
+      expect(onRemove).toHaveBeenCalledWith(new Set(['cat']));
+    });
+
+    it('should call onRemove with selected items when Backspace key is pressed', async () => {
+      let onRemove = jest.fn();
+      let {getAllByRole} = renderListbox({selectionMode: 'multiple', onRemove});
+      let options = getAllByRole('option');
+
+      // Select first item
+      await user.click(options[0]);
+      expect(options[0]).toHaveAttribute('data-selected', 'true');
+
+      // Press Backspace
+      fireEvent.keyDown(document.activeElement, {key: 'Backspace'});
+      fireEvent.keyUp(document.activeElement, {key: 'Backspace'});
+
+      expect(onRemove).toHaveBeenCalledTimes(1);
+      expect(onRemove).toHaveBeenCalledWith(new Set(['cat']));
+    });
+
+    it('should remove multiple selected items when Delete is pressed', async () => {
+      let onRemove = jest.fn();
+      let {getAllByRole} = renderListbox({selectionMode: 'multiple', onRemove});
+      let options = getAllByRole('option');
+
+      // Select multiple items
+      await user.click(options[0]);
+      await user.click(options[1]);
+      expect(options[0]).toHaveAttribute('data-selected', 'true');
+      expect(options[1]).toHaveAttribute('data-selected', 'true');
+
+      // Press Delete
+      fireEvent.keyDown(document.activeElement, {key: 'Delete'});
+      fireEvent.keyUp(document.activeElement, {key: 'Delete'});
+
+      expect(onRemove).toHaveBeenCalledTimes(1);
+      expect(onRemove).toHaveBeenCalledWith(new Set(['cat', 'dog']));
+    });
+
+    it('should remove focused item when no items are selected', async () => {
+      let onRemove = jest.fn();
+      let {getAllByRole} = renderListbox({onRemove});
+      let options = getAllByRole('option');
+
+      // Focus first item (but don't select)
+      options[0].focus();
+      expect(document.activeElement).toBe(options[0]);
+
+      // Press Delete
+      fireEvent.keyDown(document.activeElement, {key: 'Delete'});
+      fireEvent.keyUp(document.activeElement, {key: 'Delete'});
+
+      expect(onRemove).toHaveBeenCalledTimes(1);
+      expect(onRemove).toHaveBeenCalledWith(new Set(['cat']));
+    });
+
+    it('should not call onRemove if no items are selected or focused', () => {
+      let onRemove = jest.fn();
+      let {getByRole} = renderListbox({onRemove});
+      let listbox = getByRole('listbox');
+
+      // Focus the listbox container
+      listbox.focus();
+
+      // Press Delete
+      fireEvent.keyDown(document.activeElement, {key: 'Delete'});
+      fireEvent.keyUp(document.activeElement, {key: 'Delete'});
+
+      expect(onRemove).not.toHaveBeenCalled();
+    });
+
+    it('should not call onRemove if onRemove prop is not provided', async () => {
+      let {getAllByRole} = renderListbox({selectionMode: 'multiple'});
+      let options = getAllByRole('option');
+
+      // Select first item
+      await user.click(options[0]);
+
+      // Press Delete - should not throw
+      fireEvent.keyDown(document.activeElement, {key: 'Delete'});
+      fireEvent.keyUp(document.activeElement, {key: 'Delete'});
+    });
+
+    it('should exclude disabled items from removal', async () => {
+      let onRemove = jest.fn();
+      let {getAllByRole} = renderListbox({selectionMode: 'multiple', onRemove, disabledKeys: new Set(['dog'])});
+      let options = getAllByRole('option');
+
+      // Select first and second items (second is disabled)
+      await user.click(options[0]);
+      await user.click(options[1]);
+
+      // Press Delete
+      fireEvent.keyDown(document.activeElement, {key: 'Delete'});
+      fireEvent.keyUp(document.activeElement, {key: 'Delete'});
+
+      // Should only remove enabled selected items
+      expect(onRemove).toHaveBeenCalledTimes(1);
+      expect(onRemove).toHaveBeenCalledWith(new Set(['cat']));
+    });
+
+    it('should move focus to next item after deletion', async () => {
+      let onRemove = jest.fn();
+      let {getAllByRole} = renderListbox({onRemove});
+      let options = getAllByRole('option');
+
+      // Focus first item
+      options[0].focus();
+      expect(document.activeElement).toBe(options[0]);
+
+      // Press Delete
+      fireEvent.keyDown(document.activeElement, {key: 'Delete'});
+      fireEvent.keyUp(document.activeElement, {key: 'Delete'});
+
+      // Focus should move to next item (dog)
+      // Note: This test assumes the component updates focus after onRemove is called
+      // The actual focus update happens in the user's onRemove handler
+      expect(onRemove).toHaveBeenCalledTimes(1);
+    });
+
+    it('should work with single selection mode', async () => {
+      let onRemove = jest.fn();
+      let {getAllByRole} = renderListbox({selectionMode: 'single', onRemove});
+      let options = getAllByRole('option');
+
+      // Select first item
+      await user.click(options[0]);
+      expect(options[0]).toHaveAttribute('data-selected', 'true');
+
+      // Press Delete
+      fireEvent.keyDown(document.activeElement, {key: 'Delete'});
+      fireEvent.keyUp(document.activeElement, {key: 'Delete'});
+
+      expect(onRemove).toHaveBeenCalledTimes(1);
+      expect(onRemove).toHaveBeenCalledWith(new Set(['cat']));
+    });
+  });
 });

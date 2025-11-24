@@ -93,7 +93,12 @@ export interface AriaSelectableCollectionOptions {
    * - 'override': links override all other interactions (link items are not selectable).
    * @default 'action'
    */
-  linkBehavior?: 'action' | 'selection' | 'override'
+  linkBehavior?: 'action' | 'selection' | 'override',
+  /**
+   * Handler that is called when the user deletes items via keyboard (Delete or Backspace).
+   * Receives a Set of keys representing the items to be removed.
+   */
+  onRemove?: (keys: Set<Key>) => void
 }
 
 export interface SelectableCollectionAria {
@@ -121,10 +126,93 @@ export function useSelectableCollection(options: AriaSelectableCollectionOptions
     isVirtualized,
     // If no scrollRef is provided, assume the collection ref is the scrollable region
     scrollRef = ref,
-    linkBehavior = 'action'
+    linkBehavior = 'action',
+    onRemove
   } = options;
   let {direction} = useLocale();
   let router = useRouter();
+
+  // Helper function to calculate the next focus key after deletion
+  let getNextFocusKeyAfterDeletion = (keysToRemove: Set<Key>): Key | null => {
+    if (keysToRemove.size === 0) {
+      return null;
+    }
+
+    // Get all keys in the collection
+    let allKeys: Key[] = [];
+    let iterator = manager.collection.getKeys();
+    for (let key of iterator) {
+      if (!keysToRemove.has(key)) {
+        allKeys.push(key);
+      }
+    }
+
+    if (allKeys.length === 0) {
+      // All items will be deleted, return null to focus container
+      return null;
+    }
+
+    // Find the last selected key in visual order
+    let lastSelectedKey: Key | null = null;
+    for (let key of keysToRemove) {
+      if (lastSelectedKey === null) {
+        lastSelectedKey = key;
+      } else if (delegate.getKeyBelow) {
+        // Try to determine order - if key is below lastSelectedKey, it's later
+        let testKey = delegate.getKeyBelow(lastSelectedKey);
+        while (testKey && testKey !== key && !keysToRemove.has(testKey)) {
+          testKey = delegate.getKeyBelow(testKey);
+        }
+        if (testKey === key) {
+          lastSelectedKey = key;
+        }
+      }
+    }
+
+    if (lastSelectedKey === null) {
+      return allKeys[0];
+    }
+
+    // Try to get next key after last deleted item
+    if (delegate.getKeyBelow) {
+      let nextKey = delegate.getKeyBelow(lastSelectedKey);
+      while (nextKey && keysToRemove.has(nextKey)) {
+        nextKey = delegate.getKeyBelow(nextKey);
+      }
+      if (nextKey && !keysToRemove.has(nextKey)) {
+        return nextKey;
+      }
+    }
+
+    // Try previous key before first deleted item
+    let firstSelectedKey: Key | null = null;
+    for (let key of keysToRemove) {
+      if (firstSelectedKey === null) {
+        firstSelectedKey = key;
+      } else if (delegate.getKeyAbove) {
+        let testKey = delegate.getKeyAbove(firstSelectedKey);
+        while (testKey && testKey !== key && !keysToRemove.has(testKey)) {
+          testKey = delegate.getKeyAbove(testKey);
+        }
+        if (testKey === key) {
+          firstSelectedKey = key;
+        }
+      }
+    }
+
+    if (firstSelectedKey !== null && delegate.getKeyAbove) {
+      let prevKey = delegate.getKeyAbove(firstSelectedKey);
+      while (prevKey && keysToRemove.has(prevKey)) {
+        prevKey = delegate.getKeyAbove(prevKey);
+      }
+      if (prevKey && !keysToRemove.has(prevKey)) {
+        return prevKey;
+      }
+    }
+
+    // Fallback to first available key
+    return allKeys[0] || null;
+  };
 
   let onKeyDown = (e: KeyboardEvent) => {
     // Prevent option + tab from doing anything since it doesn't move focus to the cells, only buttons/checkboxes
@@ -291,6 +379,53 @@ export function useSelectableCollection(options: AriaSelectableCollectionOptions
           manager.clearSelection();
         }
         break;
+      case 'Delete':
+      case 'Backspace': {
+        if (onRemove) {
+          // Determine which keys to remove
+          let keysToRemove: Set<Key>;
+          if (manager.selectedKeys.size > 0) {
+            // Remove all selected items
+            keysToRemove = new Set(manager.selectedKeys);
+          } else if (manager.focusedKey != null) {
+            // If nothing is selected but an item is focused, remove the focused item
+            keysToRemove = new Set([manager.focusedKey]);
+          } else {
+            // Nothing to remove
+            break;
+          }
+
+          // Filter out disabled keys
+          let enabledKeysToRemove = new Set<Key>();
+          for (let key of keysToRemove) {
+            if (!manager.isDisabled(key)) {
+              enabledKeysToRemove.add(key);
+            }
+          }
+
+          if (enabledKeysToRemove.size > 0) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Calculate next focus key before removal
+            let nextKey = getNextFocusKeyAfterDeletion(enabledKeysToRemove);
+
+            // Call onRemove callback
+            onRemove(enabledKeysToRemove);
+
+            // Update focus after removal
+            if (nextKey != null) {
+              manager.setFocusedKey(nextKey);
+            } else {
+              // If no next key, focus the container
+              if (ref.current) {
+                ref.current.focus();
+              }
+            }
+          }
+        }
+        break;
+      }
       case 'Tab': {
         if (!allowsTabNavigation) {
           // There may be elements that are "tabbable" inside a collection (e.g. in a grid cell).
