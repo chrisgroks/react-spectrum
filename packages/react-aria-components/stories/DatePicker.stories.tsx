@@ -15,6 +15,8 @@ import {Button, Calendar, CalendarCell, CalendarGrid, DateInput, DatePicker, Dat
 import clsx from 'clsx';
 import {Meta, StoryFn} from '@storybook/react';
 import React from 'react';
+import {useForm, Controller} from 'react-hook-form';
+import {parseDate} from '@internationalized/date';
 import styles from '../example/index.css';
 import './styles.css';
 
@@ -335,5 +337,170 @@ export const FormValidationExample: DatePickerStory = (args) => {
         Submit
       </Button>
     </Form>
+  );
+};
+
+/**
+ * This story demonstrates DatePicker integration with react-hook-form.
+ * The DatePicker now supports ref forwarding with a focus() method,
+ * which allows react-hook-form to automatically focus the field when validation fails.
+ * 
+ * Try these scenarios:
+ * 1. Submit with no date - should auto-focus DatePicker with "Date is required" error
+ * 2. Submit with past/today's date - should auto-focus DatePicker with "Date must be in the future" error
+ * 3. Submit with future date - should succeed and display the selected date
+ */
+export const DatePickerWithReactHookForm: DatePickerStory = (args) => {
+  const {
+    control,
+    handleSubmit,
+    setFocus,
+    formState: {errors}
+  } = useForm({
+    mode: 'onSubmit',
+    defaultValues: {
+      eventDate: null
+    }
+  });
+
+  const onSubmit = (data) => {
+    action('Form submitted successfully!')(data);
+    alert(`Success! Event date: ${data.eventDate}`);
+  };
+
+  const onError = (errors) => {
+    // react-hook-form's setFocus will call the focus() method exposed by useImperativeHandle
+    if (errors.eventDate) {
+      setFocus('eventDate');
+    }
+  };
+
+  return (
+    <form 
+      onSubmit={handleSubmit(onSubmit, onError)} 
+      style={{display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 400}}
+      data-testid="react-hook-form-datepicker-form">
+      <div style={{marginBottom: 8}}>
+        <h3 style={{marginTop: 0}}>Event Registration Form</h3>
+        <p style={{fontSize: '14px', color: '#666', marginBottom: 16}}>
+          Select a future date for your event. The form will auto-focus the DatePicker if validation fails.
+        </p>
+      </div>
+
+      <Controller
+        name="eventDate"
+        control={control}
+        rules={{
+          required: 'Date is required',
+          validate: (value) => {
+            if (!value) return true;
+            
+            // Get today's date at midnight for comparison
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const selectedDate = new Date(value.year, value.month - 1, value.day);
+            
+            if (selectedDate <= today) {
+              return 'Date must be in the future';
+            }
+            return true;
+          }
+        }}
+        render={({field: {value, onChange, ref}}) => (
+          <DatePicker
+            ref={ref}
+            value={value}
+            onChange={onChange}
+            isInvalid={!!errors.eventDate}
+            data-testid="event-date-picker"
+            {...args}>
+            <Label style={{display: 'block', fontWeight: 'bold'}}>Event Date *</Label>
+            <Group style={{display: 'inline-flex', marginTop: 4}}>
+              <DateInput className={styles.field}>
+                {segment => (
+                  <DateSegment
+                    segment={segment}
+                    className={clsx(styles.segment, {
+                      [styles.placeholder]: segment.isPlaceholder
+                    })}
+                  />
+                )}
+              </DateInput>
+              <Button>🗓</Button>
+            </Group>
+            <Popover
+              placement="bottom start"
+              style={{
+                background: 'Canvas',
+                color: 'CanvasText',
+                border: '1px solid gray',
+                padding: 20
+              }}>
+              <Dialog>
+                <Calendar style={{width: 220}}>
+                  <div style={{display: 'flex', alignItems: 'center'}}>
+                    <Button slot="previous">&lt;</Button>
+                    <Heading style={{flex: 1, textAlign: 'center'}} />
+                    <Button slot="next">&gt;</Button>
+                  </div>
+                  <CalendarGrid style={{width: '100%'}}>
+                    {date => (
+                      <CalendarCell
+                        date={date}
+                        style={({isSelected, isOutsideMonth}) => ({
+                          display: isOutsideMonth ? 'none' : '',
+                          textAlign: 'center',
+                          cursor: 'default',
+                          background: isSelected ? 'blue' : ''
+                        })}
+                      />
+                    )}
+                  </CalendarGrid>
+                </Calendar>
+              </Dialog>
+            </Popover>
+          </DatePicker>
+        )}
+      />
+
+      {errors.eventDate && (
+        <div 
+          style={{
+            color: 'red',
+            fontSize: '14px',
+            marginTop: -8
+          }}
+          data-testid="error-message">
+          {errors.eventDate.message}
+        </div>
+      )}
+
+      <Button 
+        type="submit" 
+        style={{
+          marginTop: 8,
+          alignSelf: 'flex-start',
+          padding: '8px 16px',
+          cursor: 'pointer'
+        }}
+        data-testid="submit-button">
+        Register Event
+      </Button>
+
+      <div style={{
+        marginTop: 16,
+        padding: 12,
+        background: '#f5f5f5',
+        borderRadius: 4,
+        fontSize: '13px'
+      }}>
+        <strong>Test Scenarios:</strong>
+        <ol style={{marginTop: 8, marginBottom: 0, paddingLeft: 20}}>
+          <li>Submit with no date - auto-focuses with "Date is required"</li>
+          <li>Submit with past/today's date - auto-focuses with "Date must be in the future"</li>
+          <li>Submit with future date - succeeds</li>
+        </ol>
+      </div>
+    </form>
   );
 };

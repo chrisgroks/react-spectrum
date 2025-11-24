@@ -451,3 +451,111 @@ export const SelectScrollBug = () => {
     </div>
   );
 };
+
+// Create a large dataset for performance testing
+let manyItemsForPerformanceTest = makeItems(5000);
+
+export const SelectInDialogPerformance: StoryFn = (args) => {
+  let [isOpen, setIsOpen] = React.useState(false);
+  let [deferredOpen, setDeferredOpen] = React.useState(false);
+
+  return (
+    <div style={{display: 'flex', gap: 20}}>
+      <div>
+        <h3>Without deferred rendering</h3>
+        <p style={{fontSize: '12px', color: '#666'}}>Dialog opening is blocked by collection building</p>
+        <Button onPress={() => setIsOpen(true)}>Open Dialog (Slow)</Button>
+        {isOpen && (
+          <div style={{position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+            <div style={{background: 'white', padding: 20, borderRadius: 8, minWidth: 300}}>
+              <h2>Dialog with Select (5000 items)</h2>
+              <Select>
+                <Label style={{display: 'block'}}>Choose an option</Label>
+                <Button>
+                  <SelectValue />
+                  <span aria-hidden="true" style={{paddingLeft: 5}}>▼</span>
+                </Button>
+                <Popover>
+                  <Virtualizer layout={new ListLayout({rowHeight: 25})}>
+                    <ListBox items={manyItemsForPerformanceTest} className={styles.menu}>
+                      {item => <MyListBoxItem>{item.name}</MyListBoxItem>}
+                    </ListBox>
+                  </Virtualizer>
+                </Popover>
+              </Select>
+              <Button onPress={() => setIsOpen(false)} style={{marginTop: 10}}>Close</Button>
+            </div>
+          </div>
+        )}
+      </div>
+      <div>
+        <h3>With deferred rendering</h3>
+        <p style={{fontSize: '12px', color: '#666'}}>Dialog opens immediately, collection builds after</p>
+        <Button onPress={() => setDeferredOpen(true)}>Open Dialog (Fast)</Button>
+        {deferredOpen && (
+          <div style={{position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+            <div style={{background: 'white', padding: 20, borderRadius: 8, minWidth: 300}}>
+              <h2>Dialog with Select (5000 items)</h2>
+              <Select deferCollectionRendering>
+                <Label style={{display: 'block'}}>Choose an option</Label>
+                <Button>
+                  <SelectValue />
+                  <span aria-hidden="true" style={{paddingLeft: 5}}>▼</span>
+                </Button>
+                <Popover>
+                  <Virtualizer layout={new ListLayout({rowHeight: 25})}>
+                    <ListBox items={manyItemsForPerformanceTest} className={styles.menu}>
+                      {item => <MyListBoxItem>{item.name}</MyListBoxItem>}
+                    </ListBox>
+                  </Virtualizer>
+                </Popover>
+              </Select>
+              <Button onPress={() => setDeferredOpen(false)} style={{marginTop: 10}}>Close</Button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export const SelectWithDeferredCollectionRendering: SelectStory = (args) => (
+  <div style={{display: 'flex', gap: 20}}>
+    <div>
+      <h3>Without deferred rendering (default)</h3>
+      <p style={{fontSize: '12px', color: '#666'}}>Building collection blocks initial render</p>
+      <Select {...args}>
+        <Label style={{display: 'block'}}>Select (5000 items)</Label>
+        <Button>
+          <SelectValue />
+          <span aria-hidden="true" style={{paddingLeft: 5}}>▼</span>
+        </Button>
+        <Popover>
+          <Virtualizer layout={new ListLayout({rowHeight: 25})}>
+            <ListBox items={manyItemsForPerformanceTest} className={styles.menu}>
+              {item => <MyListBoxItem>{item.name}</MyListBoxItem>}
+            </ListBox>
+          </Virtualizer>
+        </Popover>
+      </Select>
+    </div>
+    <div>
+      <h3>With deferred rendering</h3>
+      <p style={{fontSize: '12px', color: '#666'}}>Renders trigger first, builds collection after</p>
+      <Select {...args} deferCollectionRendering>
+        <Label style={{display: 'block'}}>Select (5000 items)</Label>
+        <Button>
+          <SelectValue />
+          <span aria-hidden="true" style={{paddingLeft: 5}}>▼</span>
+        </Button>
+        <Popover>
+          <Virtualizer layout={new ListLayout({rowHeight: 25})}>
+            <ListBox items={manyItemsForPerformanceTest} className={styles.menu}>
+              {item => <MyListBoxItem>{item.name}</MyListBoxItem>}
+            </ListBox>
+          </Virtualizer>
+        </Popover>
+      </Select>
+    </div>
+  </div>
+);
