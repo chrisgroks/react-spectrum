@@ -20,6 +20,7 @@ interface ListData {
   shouldUseVirtualFocus?: boolean,
   isVirtualized?: boolean,
   onAction?: (key: Key) => void,
+  onRemove?: (keys: Set<Key>) => void,
   linkBehavior?: 'action' | 'selection' | 'override'
 }
 

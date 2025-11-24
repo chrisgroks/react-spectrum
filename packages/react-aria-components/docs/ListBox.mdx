@@ -373,6 +373,41 @@ These selection behaviors are defined in [Aria Practices](https://www.w3.org/WAI
 </ListBox>
 ```
 
+### Removing items
+
+The `onRemove` prop can be used to allow the user to remove items from a ListBox using keyboard shortcuts. When the `onRemove` prop is provided, users can press the <Keyboard>Delete</Keyboard> or <Keyboard>Backspace</Keyboard> keys to remove selected items. If no items are selected, the focused item will be removed. When multiple items are selected, all selected items will be removed at once.
+
+```tsx example
+import {useListData} from '@react-stately/data';
+
+function Example() {
+  let list = useListData({
+    initialItems: [
+      { id: 1, name: "Email 1" },
+      { id: 2, name: "Email 2" },
+      { id: 3, name: "Email 3" },
+      { id: 4, name: "Email 4" }
+    ]
+  });
+
+  return (
+    <ListBox
+      aria-label="Inbox"
+      selectionMode="multiple"
+      /*- begin highlight -*/
+      onRemove={(keys) => list.remove(...keys)}
+      /*- end highlight -*/
+      selectedKeys={list.selectedKeys}
+      onSelectionChange={list.setSelectedKeys}
+    >
+      {list.items.map(item => (
+        <ListBoxItem key={item.id} id={item.id}>{item.name}</ListBoxItem>
+      ))}
+    </ListBox>
+  );
+}
+```
+
 ## Links
 
 By default, interacting with an item in a ListBox triggers `onSelectionChange`. Alternatively, items may be links to another page or website. This can be achieved by passing the `href` prop to the `<ListBoxItem>` component.
@@ -408,6 +443,71 @@ By default, link items in a ListBox are not selectable, and only perform navigat
 ### Client side routing
 
 The `<ListBoxItem>` component works with frameworks and client side routers like [Next.js](https://nextjs.org/) and [React Router](https://reactrouter.com/en/main). As with other React Aria components that support links, this works via the <TypeLink links={docs.links} type={docs.exports.RouterProvider} /> component at the root of your app. See the [client side routing guide](routing.html) to learn how to set this up.
+
+## Removing items
+
+The `onRemove` prop can be used to allow the user to remove items from a ListBox using keyboard events. When the <Keyboard>Delete</Keyboard> or <Keyboard>Backspace</Keyboard> key is pressed on a focused item, the `onRemove` callback is called with a Set of keys representing the items to be removed. If the focused item is selected, all selected items will be removed. Otherwise, only the focused item will be removed.
+
+```tsx example
+import {useListData} from '@react-stately/data';
+
+function Example() {
+  let list = useListData({
+    initialItems: [
+      { id: 1, name: 'Email 1' },
+      { id: 2, name: 'Email 2' },
+      { id: 3, name: 'Email 3' },
+      { id: 4, name: 'Email 4' }
+    ]
+  });
+
+  return (
+    <ListBox
+      aria-label="Email inbox"
+      items={list.items}
+      selectedKeys={list.selectedKeys}
+      onSelectionChange={list.setSelectedKeys}
+      onRemove={(keys) => list.remove(...keys)}>
+      {(item) => <ListBoxItem id={item.id}>{item.name}</ListBoxItem>}
+    </ListBox>
+  );
+}
+```
+
+When using multiple selection, pressing <Keyboard>Delete</Keyboard> or <Keyboard>Backspace</Keyboard> on a selected item will remove all selected items:
+
+```tsx example
+import {useListData} from '@react-stately/data';
+import type {Selection} from 'react-aria-components';
+
+function Example() {
+  let list = useListData({
+    initialItems: [
+      { id: 1, name: 'Task 1' },
+      { id: 2, name: 'Task 2' },
+      { id: 3, name: 'Task 3' },
+      { id: 4, name: 'Task 4' }
+    ]
+  });
+
+  return (
+    <ListBox
+      aria-label="Tasks"
+      items={list.items}
+      selectionMode="multiple"
+      selectedKeys={list.selectedKeys}
+      onSelectionChange={list.setSelectedKeys}
+      onRemove={(keys) => {
+        // Remove all selected items
+        list.remove(...keys);
+      }}>
+      {(item) => <ListBoxItem id={item.id}>{item.name}</ListBoxItem>}
+    </ListBox>
+  );
+}
+```
+
+Disabled items cannot be removed and will be excluded from the Set of keys passed to `onRemove`.
 
 ## Sections
 

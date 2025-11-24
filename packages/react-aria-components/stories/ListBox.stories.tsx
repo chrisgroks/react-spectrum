@@ -293,6 +293,43 @@ export const ListBoxHover: ListBoxStory = () => (
   </ListBox>
 );
 
+export const ListBoxWithDeletion: ListBoxStory = () => {
+  let list = useListData({
+    initialItems: [
+      { id: 1, name: 'Email 1' },
+      { id: 2, name: 'Email 2' },
+      { id: 3, name: 'Email 3' },
+      { id: 4, name: 'Email 4' }
+    ]
+  });
+
+  return (
+    <ListBox
+      className={styles.menu}
+      aria-label="Inbox"
+      selectionMode="multiple"
+      selectedKeys={list.selectedKeys}
+      onSelectionChange={list.setSelectedKeys}
+      onRemove={(keys) => {
+        action('onRemove')(keys);
+        list.remove(...keys);
+      }}>
+      {list.items.map(item => (
+        <MyListBoxItem key={item.id} id={item.id}>{item.name}</MyListBoxItem>
+      ))}
+    </ListBox>
+  );
+};
+
+ListBoxWithDeletion.story = {
+  name: 'ListBox with deletion',
+  parameters: {
+    description: {
+      story: 'ListBox with onRemove prop. Press Delete or Backspace to remove selected items, or the focused item if none are selected.'
+    }
+  }
+};
+
 export const ListBoxGrid: ListBoxStory = (args) => (
   <ListBox
     {...args}

@@ -337,3 +337,112 @@ export const FormValidationExample: DatePickerStory = (args) => {
     </Form>
   );
 };
+
+export const DatePickerWithReactHookForm: DatePickerStory = (args) => {
+  const datePickerRef = React.useRef<HTMLDivElement>(null);
+  const [selectedDate, setSelectedDate] = React.useState(null);
+  const [errorMessage, setErrorMessage] = React.useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    // Validate that the date is in the future
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    if (!selectedDate) {
+      setErrorMessage('Please select a date');
+      // Now this works! DatePicker supports ref forwarding with focus() method
+      if (datePickerRef.current) {
+        datePickerRef.current.focus();
+      }
+      return;
+    }
+    
+    const selectedJsDate = new Date(selectedDate.year, selectedDate.month - 1, selectedDate.day);
+    
+    if (selectedJsDate <= today) {
+      setErrorMessage('Please select a future date');
+      // Auto-focus the DatePicker on validation error
+      if (datePickerRef.current) {
+        datePickerRef.current.focus();
+      }
+      return;
+    }
+    
+    // Validation passed
+    setErrorMessage('');
+    action('Form submitted successfully!')(selectedDate);
+  };
+
+  return (
+    <Form onSubmit={handleSubmit} style={{display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 400}}>
+      <div style={{marginBottom: 8}}>
+        <p style={{fontSize: '14px', color: '#666', marginBottom: 8}}>
+          This demonstrates DatePicker with ref forwarding. Try these scenarios:
+        </p>
+        <ol style={{fontSize: '13px', color: '#666', paddingLeft: 20, margin: 0}}>
+          <li>Submit with no date - DatePicker will auto-focus</li>
+          <li>Submit with past/today's date - DatePicker will auto-focus with error</li>
+          <li>Submit with future date - form succeeds without auto-focus</li>
+        </ol>
+      </div>
+
+      <DatePicker
+        ref={datePickerRef}
+        value={selectedDate}
+        onChange={setSelectedDate}
+        data-testid="date-picker-with-ref"
+        {...args}>
+        <Label style={{display: 'block', fontWeight: 'bold', marginBottom: 4}}>Select Event Date</Label>
+        <Group style={{display: 'inline-flex'}}>
+          <DateInput className={styles.field}>
+            {segment => <DateSegment segment={segment} className={clsx(styles.segment, {[styles.placeholder]: segment.isPlaceholder})} />}
+          </DateInput>
+          <Button>🗓</Button>
+        </Group>
+        <Popover
+          placement="bottom start"
+          style={{
+            background: 'Canvas',
+            color: 'CanvasText',
+            border: '1px solid gray',
+            padding: 20
+          }}>
+          <Dialog>
+            <Calendar style={{width: 220}}>
+              <div style={{display: 'flex', alignItems: 'center'}}>
+                <Button slot="previous">&lt;</Button>
+                <Heading style={{flex: 1, textAlign: 'center'}} />
+                <Button slot="next">&gt;</Button>
+              </div>
+              <CalendarGrid style={{width: '100%'}}>
+                {date => <CalendarCell date={date} style={({isSelected, isOutsideMonth}) => ({display: isOutsideMonth ? 'none' : '', textAlign: 'center', cursor: 'default', background: isSelected ? 'blue' : ''})} />}
+              </CalendarGrid>
+            </Calendar>
+          </Dialog>
+        </Popover>
+      </DatePicker>
+      
+      {errorMessage && (
+        <div 
+          role="alert"
+          style={{
+            color: '#d32f2f',
+            fontSize: '14px',
+            marginTop: 4,
+            padding: '8px 12px',
+            backgroundColor: '#ffebee',
+            borderRadius: 4,
+            border: '1px solid #ffcdd2'
+          }}>
+          {errorMessage}
+        </div>
+      )}
+      
+      <Button type="submit" style={{marginTop: 8, alignSelf: 'flex-start', padding: '8px 16px'}}>
+        Submit
+      </Button>
+    </Form>
+  );
+};

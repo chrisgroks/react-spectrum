@@ -36,7 +36,7 @@ import {GroupContext} from './Group';
 import {HiddenDateInput} from './HiddenDateInput';
 import {LabelContext} from './Label';
 import {PopoverContext} from './Popover';
-import React, {createContext, ForwardedRef, forwardRef, useCallback, useRef, useState} from 'react';
+import React, {createContext, ForwardedRef, forwardRef, useCallback, useImperativeHandle, useRef, useState} from 'react';
 import {TextContext} from './Text';
 
 export interface DatePickerRenderProps {
@@ -118,6 +118,7 @@ export const DatePicker = /*#__PURE__*/ (forwardRef as forwardRefType)(function 
   });
 
   let groupRef = useRef<HTMLDivElement>(null);
+  let containerRef = useRef<HTMLDivElement>(null);
   let [labelRef, label] = useSlot(
     !props['aria-label'] && !props['aria-labelledby']
   );
@@ -136,6 +137,20 @@ export const DatePicker = /*#__PURE__*/ (forwardRef as forwardRefType)(function 
     label,
     validationBehavior
   }, state, groupRef);
+
+  // Expose a focus() method that focuses the first date segment
+  useImperativeHandle(ref, () => ({
+    ...containerRef.current!,
+    focus() {
+      // Find the first focusable date segment and focus it
+      if (groupRef.current) {
+        let firstSegment = groupRef.current.querySelector('[role="spinbutton"], [role="textbox"]') as HTMLElement;
+        if (firstSegment) {
+          firstSegment.focus();
+        }
+      }
+    }
+  }));
 
   // Allows calendar width to match input group
   let [groupWidth, setGroupWidth] = useState<string | null>(null);
@@ -196,7 +211,7 @@ export const DatePicker = /*#__PURE__*/ (forwardRef as forwardRefType)(function 
       ]}>
       <div
         {...mergeProps(DOMProps, renderProps, focusProps)}
-        ref={ref}
+        ref={containerRef}
         slot={props.slot || undefined}
         data-focus-within={isFocused || undefined}
         data-invalid={state.isInvalid || undefined}
@@ -227,6 +242,7 @@ export const DateRangePicker = /*#__PURE__*/ (forwardRef as forwardRefType)(func
   });
 
   let groupRef = useRef<HTMLDivElement>(null);
+  let containerRef = useRef<HTMLDivElement>(null);
   let [labelRef, label] = useSlot(
     !props['aria-label'] && !props['aria-labelledby']
   );
@@ -246,6 +262,20 @@ export const DateRangePicker = /*#__PURE__*/ (forwardRef as forwardRefType)(func
     label,
     validationBehavior
   }, state, groupRef);
+
+  // Expose a focus() method that focuses the first date segment
+  useImperativeHandle(ref, () => ({
+    ...containerRef.current!,
+    focus() {
+      // Find the first focusable date segment and focus it
+      if (groupRef.current) {
+        let firstSegment = groupRef.current.querySelector('[role="spinbutton"], [role="textbox"]') as HTMLElement;
+        if (firstSegment) {
+          firstSegment.focus();
+        }
+      }
+    }
+  }));
 
   // Allows calendar width to match input group
   let [groupWidth, setGroupWidth] = useState<string | null>(null);
@@ -311,7 +341,7 @@ export const DateRangePicker = /*#__PURE__*/ (forwardRef as forwardRefType)(func
       ]}>
       <div
         {...mergeProps(DOMProps, renderProps, focusProps)}
-        ref={ref}
+        ref={containerRef}
         slot={props.slot || undefined}
         data-focus-within={isFocused || undefined}
         data-invalid={state.isInvalid || undefined}

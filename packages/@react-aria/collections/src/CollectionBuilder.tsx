@@ -17,7 +17,7 @@ import {createPortal} from 'react-dom';
 import {FocusableContext} from '@react-aria/interactions';
 import {forwardRefType, Key, Node} from '@react-types/shared';
 import {Hidden} from './Hidden';
-import React, {createContext, ForwardedRef, forwardRef, JSX, ReactElement, ReactNode, useCallback, useContext, useMemo, useRef, useState} from 'react';
+import React, {createContext, ForwardedRef, forwardRef, JSX, ReactElement, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState} from 'react';
 import {useIsSSR} from '@react-aria/ssr';
 import {useSyncExternalStore as useSyncExternalStoreShim} from 'use-sync-external-store/shim/index.js';
 
@@ -27,7 +27,14 @@ const CollectionDocumentContext = createContext<Document<any, BaseCollection<any
 export interface CollectionBuilderProps<C extends BaseCollection<object>> {
   content: ReactNode,
   children: (collection: C) => ReactNode,
-  createCollection?: () => C
+  createCollection?: () => C,
+  /**
+   * When true, defers rendering the hidden collection tree until after the initial render.
+   * This improves performance for selects with many items by allowing the trigger to render immediately.
+   * Trade-off: If a value is pre-selected, it may briefly show a placeholder until the collection builds.
+   * @default false
+   */
+  deferCollectionRendering?: boolean
 }
 
 /**
@@ -51,13 +58,34 @@ export function CollectionBuilder<C extends BaseCollection<object>>(props: Colle
   // This is fine. CollectionDocumentContext never changes after mounting.
   // eslint-disable-next-line react-hooks/rules-of-hooks
   let {collection, document} = useCollectionDocument(props.createCollection);
+  
+  // During SSR, we must build the collection synchronously, so don't defer
+  let isSSR = useIsSSR();
+  
+  // When deferCollectionRendering is true, delay rendering the hidden tree until after initial render
+  // But never defer during SSR as the collection must be built synchronously
+  let [shouldRenderHidden, setShouldRenderHidden] = useState(!props.deferCollectionRendering || isSSR);
+  
+  // Use useEffect to defer rendering after initial render completes
+  useEffect(() => {
+    if (props.deferCollectionRendering && !isSSR && !shouldRenderHidden) {
+      // Use setTimeout to defer to the next event loop, allowing the initial render to complete
+      let timeoutId = setTimeout(() => {
+        setShouldRenderHidden(true);
+      }, 0);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [props.deferCollectionRendering, isSSR, shouldRenderHidden]);
+
   return (
     <>
-      <Hidden>
-        <CollectionDocumentContext.Provider value={document}>
-          {props.content}
-        </CollectionDocumentContext.Provider>
-      </Hidden>
+      {shouldRenderHidden && (
+        <Hidden>
+          <CollectionDocumentContext.Provider value={document}>
+            {props.content}
+          </CollectionDocumentContext.Provider>
+        </Hidden>
+      )}
       <CollectionInner render={props.children} collection={collection} />
     </>
   );
