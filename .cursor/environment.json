@@ -1,10 +1,6 @@
 {
-  "build": {
-    "dockerfile": "Dockerfile",
-    "context": "."
-  },
+  "snapshot": "snapshot-20251123-84524b31-20e1-4bbd-b231-dc479b7cadb7",
   "install": "yarn install",
-  "start": "",
   "terminals": [
     {
       "name": "Storybook",

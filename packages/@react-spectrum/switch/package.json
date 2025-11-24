@@ -45,7 +45,6 @@
     "@react-aria/switch": "^3.7.8",
     "@react-spectrum/utils": "^3.12.9",
     "@react-stately/toggle": "^3.9.2",
-    "@react-types/shared": "^3.32.1",
     "@react-types/switch": "^3.5.15",
     "@swc/helpers": "^0.5.0"
   },
@@ -54,6 +53,7 @@
   },
   "peerDependencies": {
     "@react-spectrum/provider": "^3.0.0",
+    "@react-types/shared": "^3.32.1",
     "react": "^16.8.0 || ^17.0.0-rc.1 || ^18.0.0 || ^19.0.0-rc.1",
     "react-dom": "^16.8.0 || ^17.0.0-rc.1 || ^18.0.0 || ^19.0.0-rc.1"
   },

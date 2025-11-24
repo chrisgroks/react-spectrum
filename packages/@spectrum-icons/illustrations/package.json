@@ -21,7 +21,6 @@
     "build-icons": "yarn build-cjs && yarn build-esm && yarn generate-types"
   },
   "dependencies": {
-    "@react-aria/utils": "^3.31.0",
     "@react-spectrum/icon": "^3.8.9",
     "@swc/helpers": "^0.5.0"
   },
@@ -29,6 +28,7 @@
     "@spectrum-icons/build-tools": "3.0.0-alpha.1"
   },
   "peerDependencies": {
+    "@react-aria/utils": "^3.31.0",
     "@react-spectrum/provider": "^3.0.0",
     "react": "^16.8.0 || ^17.0.0-rc.1 || ^18.0.0 || ^19.0.0-rc.1",
     "react-dom": "^16.8.0 || ^17.0.0-rc.1 || ^18.0.0 || ^19.0.0-rc.1"
