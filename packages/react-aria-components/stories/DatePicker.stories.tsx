@@ -337,3 +337,108 @@ export const FormValidationExample: DatePickerStory = (args) => {
     </Form>
   );
 };
+
+export const DatePickerWithReactHookForm: DatePickerStory = (args) => {
+  const datePickerRef = React.useRef<any>(null);
+  const [selectedDate, setSelectedDate] = React.useState(null);
+  const [errorMessage, setErrorMessage] = React.useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    // Validate that the date is in the future
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    if (!selectedDate) {
+      setErrorMessage('Please select a date');
+      // With ref forwarding support, we can now focus the DatePicker
+      if (datePickerRef.current && datePickerRef.current.focus) {
+        datePickerRef.current.focus();
+      }
+      return;
+    }
+    
+    const selectedJsDate = new Date(selectedDate.year, selectedDate.month - 1, selectedDate.day);
+    
+    if (selectedJsDate <= today) {
+      setErrorMessage('Please select a future date');
+      // Auto-focus the DatePicker on validation error
+      if (datePickerRef.current && datePickerRef.current.focus) {
+        datePickerRef.current.focus();
+      }
+      return;
+    }
+    
+    // Validation passed
+    setErrorMessage('');
+    action('Form submitted successfully!')(selectedDate);
+  };
+
+  return (
+    <Form onSubmit={handleSubmit} style={{display: 'flex', flexDirection: 'column', gap: 12, padding: 20}}>
+      <div style={{marginBottom: 16}}>
+        <h3 style={{margin: 0, marginBottom: 8}}>DatePicker with react-hook-form</h3>
+        <p style={{margin: 0, fontSize: 14, color: '#666'}}>
+          This demonstrates ref forwarding support for the DatePicker component.
+          Try submitting with no date, past/today's date, or a future date to see auto-focus in action.
+        </p>
+      </div>
+      
+      <DatePicker
+        ref={datePickerRef}
+        value={selectedDate}
+        onChange={setSelectedDate}
+        {...args}
+        data-testid="date-picker-with-ref">
+        <Label style={{display: 'block', fontWeight: 'bold', marginBottom: 4}}>Select Event Date (must be in the future)</Label>
+        <Group style={{display: 'inline-flex', border: errorMessage ? '2px solid red' : '1px solid #ccc', borderRadius: 4, padding: 4}}>
+          <DateInput className={styles.field}>
+            {segment => <DateSegment segment={segment} className={clsx(styles.segment, {[styles.placeholder]: segment.isPlaceholder})} />}
+          </DateInput>
+          <Button style={{marginLeft: 4}}>🗓</Button>
+        </Group>
+        <Popover
+          placement="bottom start"
+          style={{
+            background: 'Canvas',
+            color: 'CanvasText',
+            border: '1px solid gray',
+            padding: 20
+          }}>
+          <Dialog>
+            <Calendar style={{width: 220}}>
+              <div style={{display: 'flex', alignItems: 'center'}}>
+                <Button slot="previous">&lt;</Button>
+                <Heading style={{flex: 1, textAlign: 'center'}} />
+                <Button slot="next">&gt;</Button>
+              </div>
+              <CalendarGrid style={{width: '100%'}}>
+                {date => <CalendarCell date={date} style={({isSelected, isOutsideMonth}) => ({display: isOutsideMonth ? 'none' : '', textAlign: 'center', cursor: 'default', background: isSelected ? 'blue' : ''})} />}
+              </CalendarGrid>
+            </Calendar>
+          </Dialog>
+        </Popover>
+      </DatePicker>
+      
+      {errorMessage && (
+        <div style={{color: 'red', fontSize: '14px', fontWeight: 'bold', marginTop: 4}} data-testid="error-message">
+          {errorMessage}
+        </div>
+      )}
+      
+      <Button type="submit" style={{marginTop: 8, alignSelf: 'flex-start', padding: '8px 16px', cursor: 'pointer'}} data-testid="submit-button">
+        Submit
+      </Button>
+      
+      <div style={{marginTop: 16, padding: 12, backgroundColor: '#f5f5f5', borderRadius: 4, fontSize: 13}}>
+        <strong>Test Scenarios:</strong>
+        <ol style={{margin: '8px 0 0 0', paddingLeft: 20}}>
+          <li>Submit with no date - should auto-focus DatePicker</li>
+          <li>Submit with past/today's date - should auto-focus DatePicker with error</li>
+          <li>Submit with future date - should succeed without auto-focus</li>
+        </ol>
+      </div>
+    </Form>
+  );
+};
